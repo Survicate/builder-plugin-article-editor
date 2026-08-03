@@ -95,11 +95,30 @@ const createButton = (item: ToolbarItem, editor: Editor) => {
   return button;
 };
 
+const createInsertButton = (editor: Editor) => {
+  const button = document.createElement('button');
+
+  button.type = 'button';
+  button.className = 'sv-toolbar__insert';
+  button.textContent = '+ Insert';
+  button.title = 'Insert a template (or type / in the text)';
+  button.addEventListener('mousedown', (event) => event.preventDefault());
+  button.addEventListener('click', () => editor.chain().focus().insertContent('/').run());
+
+  return button;
+};
+
 export const createToolbar = (editor: Editor): HTMLElement => {
   const toolbar = document.createElement('div');
   const updaters: (() => void)[] = [];
 
   toolbar.className = 'sv-toolbar';
+  toolbar.append(createInsertButton(editor));
+
+  const insertSeparator = document.createElement('span');
+
+  insertSeparator.className = 'sv-toolbar__separator';
+  toolbar.append(insertSeparator);
 
   ITEMS.forEach((item) => {
     if (item === SEPARATOR) {

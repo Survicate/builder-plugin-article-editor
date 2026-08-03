@@ -38,7 +38,8 @@
     "@tiptap/core": "^3.29.2",
     "@tiptap/extension-table": "^3.29.2",
     "@tiptap/pm": "^3.29.2",
-    "@tiptap/starter-kit": "^3.29.2"
+    "@tiptap/starter-kit": "^3.29.2",
+    "@tiptap/suggestion": "^3.29.2"
   },
   "devDependencies": {
     "@builder.io/react": "^3.2.9",

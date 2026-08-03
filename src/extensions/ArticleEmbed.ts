@@ -30,21 +30,52 @@ export const ArticleEmbed = Node.create({
   },
 
   addNodeView() {
-    return ({ node }) => {
+    return ({ editor, getPos, node }) => {
       const kind = (node.attrs['data-article-embed'] as string | null) ?? '';
       const source = (node.attrs['data-src'] as string | null) ?? '';
       const dom = document.createElement('div');
       const label = document.createElement('span');
-      const url = document.createElement('span');
 
       dom.className = 'sv-embed-card';
       dom.dataset.embedKind = kind;
       dom.contentEditable = 'false';
       label.className = 'sv-embed-card__label';
       label.textContent = EMBED_LABELS[kind] ?? 'Embedded content';
-      url.className = 'sv-embed-card__url';
-      url.textContent = source;
-      dom.append(label, url);
+      dom.append(label);
+
+      if (source) {
+        const url = document.createElement('span');
+
+        url.className = 'sv-embed-card__url';
+        url.textContent = source;
+        dom.append(url);
+
+        return { dom };
+      }
+
+      const input = document.createElement('input');
+
+      input.className = 'sv-embed-card__input';
+      input.placeholder = 'Paste the embed address, starting with https://';
+      input.type = 'url';
+      input.addEventListener('mousedown', (event) => event.stopPropagation());
+      input.addEventListener('keydown', (event) => event.stopPropagation());
+      input.addEventListener('change', () => {
+        const position = typeof getPos === 'function' ? getPos() : null;
+        const value = input.value.trim();
+
+        if (position === null || position === undefined || !value.startsWith('https://')) return;
+
+        editor
+          .chain()
+          .command(({ tr }) => {
+            tr.setNodeAttribute(position, 'data-src', value);
+
+            return true;
+          })
+          .run();
+      });
+      dom.append(input);
 
       return { dom };
     };

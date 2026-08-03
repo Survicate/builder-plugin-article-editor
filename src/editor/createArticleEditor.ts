@@ -5,6 +5,8 @@ import { serializeArticleHtml } from '@/editor/serializeArticleHtml';
 import { ArticleEmbed } from '@/extensions/ArticleEmbed';
 import { ArticleImage } from '@/extensions/ArticleImage';
 import { Figcaption, Figure } from '@/extensions/Figure';
+import { PasteCleanup } from '@/extensions/PasteCleanup';
+import { SlashCommands } from '@/extensions/SlashCommands';
 
 export interface CreateArticleEditorOptions {
   content: string;
@@ -27,6 +29,8 @@ export const ARTICLE_EXTENSIONS = [
   ArticleImage,
   Figure,
   Figcaption,
+  SlashCommands,
+  PasteCleanup,
 ];
 
 export const createArticleEditor = ({
