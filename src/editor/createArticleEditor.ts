@@ -1,5 +1,10 @@
 import { Editor } from '@tiptap/core';
+import { TableKit } from '@tiptap/extension-table';
 import StarterKit from '@tiptap/starter-kit';
+import { serializeArticleHtml } from '@/editor/serializeArticleHtml';
+import { ArticleEmbed } from '@/extensions/ArticleEmbed';
+import { ArticleImage } from '@/extensions/ArticleImage';
+import { Figcaption, Figure } from '@/extensions/Figure';
 
 export interface CreateArticleEditorOptions {
   content: string;
@@ -7,6 +12,22 @@ export interface CreateArticleEditorOptions {
   onContentError: (error: Error) => void;
   onUpdate: (html: string) => void;
 }
+
+export const ARTICLE_EXTENSIONS = [
+  StarterKit.configure({
+    heading: { levels: [1, 2, 3, 4, 5, 6] },
+    link: {
+      HTMLAttributes: { class: null, rel: null, target: null },
+      autolink: false,
+      openOnClick: false,
+    },
+  }),
+  TableKit.configure({ table: { resizable: true } }),
+  ArticleEmbed,
+  ArticleImage,
+  Figure,
+  Figcaption,
+];
 
 export const createArticleEditor = ({
   content,
@@ -18,7 +39,9 @@ export const createArticleEditor = ({
     content,
     element,
     emitContentError: true,
-    extensions: [StarterKit],
+    extensions: ARTICLE_EXTENSIONS,
     onContentError: ({ error }) => onContentError(error),
-    onUpdate: ({ editor }) => onUpdate(editor.getHTML()),
+    onUpdate: ({ editor }) => onUpdate(serializeArticleHtml(editor.getHTML())),
   });
+
+export const serializeEditor = (editor: Editor): string => serializeArticleHtml(editor.getHTML());

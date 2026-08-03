@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { render } from 'react-dom';
 import { ArticleEditor } from '@/ArticleEditor';
-import { createArticleEditor } from '@/editor/createArticleEditor';
+import { createArticleEditor, serializeEditor } from '@/editor/createArticleEditor';
 import { SAMPLE_ARTICLE } from './fixtures/sample-article';
 import './harness.css';
 
@@ -13,7 +13,7 @@ const serializeThroughSchema = (html: string) => {
     onContentError: () => undefined,
     onUpdate: () => undefined,
   });
-  const serialized = editor.getHTML();
+  const serialized = serializeEditor(editor);
 
   editor.destroy();
 
