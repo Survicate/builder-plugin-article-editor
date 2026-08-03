@@ -1,0 +1,67 @@
+{
+  "name": "@survicate/builder-plugin-article-editor",
+  "version": "0.0.1",
+  "description": "Long-form article editor for Survicate blog posts in the Builder.io dashboard",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Survicate/builder-plugin-article-editor.git"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "entry": "plugin",
+  "output": "plugin.system.js",
+  "main": "dist/plugin.system.js",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "webpack --mode production",
+    "start": "webpack serve --mode development",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "pre-pr": "npm run lint && npm run typecheck && npm run test:run && npm run build",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,mjs}": "eslint --fix"
+  },
+  "dependencies": {
+    "@tiptap/core": "^3.29.2",
+    "@tiptap/pm": "^3.29.2",
+    "@tiptap/starter-kit": "^3.29.2"
+  },
+  "devDependencies": {
+    "@builder.io/react": "^3.2.9",
+    "@eslint/js": "^9.14.0",
+    "@types/react": "^16.14.62",
+    "@types/react-dom": "^16.9.24",
+    "@vitest/coverage-v8": "~4.0.15",
+    "css-loader": "^6.11.0",
+    "eslint": "^9.14.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-no-relative-import-paths": "^1.6.1",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-simple-import-sort": "^12.0.0",
+    "husky": "^9.1.7",
+    "jsdom": "^25.0.0",
+    "lint-staged": "^16.3.3",
+    "prettier": "^3.8.4",
+    "react": "^16.14.0",
+    "react-dom": "^16.14.0",
+    "style-loader": "^3.3.4",
+    "ts-loader": "^9.5.1",
+    "typescript": "^5.4.5",
+    "typescript-eslint": "^8.14.0",
+    "vitest": "~4.0.15",
+    "webpack": "^5.93.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^5.0.4"
+  }
+}
