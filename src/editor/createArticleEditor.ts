@@ -1,6 +1,7 @@
 import { Editor } from '@tiptap/core';
 import { TableKit } from '@tiptap/extension-table';
 import StarterKit from '@tiptap/starter-kit';
+import { normalizeIncomingHtml } from '@/editor/normalizeIncomingHtml';
 import { serializeArticleHtml } from '@/editor/serializeArticleHtml';
 import { ArticleEmbed } from '@/extensions/ArticleEmbed';
 import { ArticleImage } from '@/extensions/ArticleImage';
@@ -40,7 +41,7 @@ export const createArticleEditor = ({
   onUpdate,
 }: CreateArticleEditorOptions): Editor =>
   new Editor({
-    content,
+    content: normalizeIncomingHtml(content),
     element,
     emitContentError: true,
     extensions: ARTICLE_EXTENSIONS,

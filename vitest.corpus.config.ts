@@ -10,7 +10,8 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
-    exclude: ['node_modules/**', 'scripts/**'],
     globals: true,
+    include: ['scripts/verify-corpus.test.ts'],
+    testTimeout: 600_000,
   },
 });

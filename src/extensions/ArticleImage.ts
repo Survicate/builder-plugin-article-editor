@@ -9,12 +9,19 @@ const plainAttribute = (name: string) => ({
   },
 });
 
+const linkAttribute = (name: string) => ({
+  parseHTML: (element: HTMLElement) => element.closest('a[href]')?.getAttribute(name) ?? null,
+  renderHTML: () => ({}),
+});
+
 export const ArticleImage = Node.create({
   addAttributes() {
     return {
       alt: plainAttribute('alt'),
       height: plainAttribute('height'),
+      href: linkAttribute('href'),
       src: plainAttribute('src'),
+      target: linkAttribute('target'),
       width: plainAttribute('width'),
     };
   },
@@ -26,11 +33,18 @@ export const ArticleImage = Node.create({
   name: 'articleImage',
 
   parseHTML() {
-    return [{ tag: 'img[src]' }];
+    return [{ priority: 60, tag: 'a[href] img[src]' }, { tag: 'img[src]' }];
   },
 
-  renderHTML({ HTMLAttributes }) {
-    return ['img', mergeAttributes(HTMLAttributes)];
+  renderHTML({ HTMLAttributes, node }) {
+    const image = ['img', mergeAttributes(HTMLAttributes)];
+    const href = node.attrs.href as string | null;
+
+    if (!href) return image as never;
+
+    const target = node.attrs.target as string | null;
+
+    return ['a', { href, ...(target === null ? {} : { target }) }, image] as never;
   },
 
   selectable: true,

@@ -51,6 +51,20 @@ remove the local URL when finished.
 | `npm run format`    | Prettier write                               |
 | `npm run pre-pr`    | lint + typecheck + tests + build             |
 
+## Corpus gate
+
+Before the editor goes anywhere near real content, every migrated post has to
+survive a round-trip. Point `CORPUS_PATH` at the transformed posts and run:
+
+```bash
+CORPUS_PATH=../www/scripts/.webflow-export/<date>/transformed/posts.json npm run verify:corpus
+```
+
+The gate loads each post into the editor, serializes it back and fails if any
+link, embed source or image URL disappears, if a single character of article
+text changes, or if the number of tables, header cells, figures, captions,
+images, quotes, headings or embeds shifts.
+
 ## Publishing
 
 The package is published publicly under the `@survicate` scope, owned by the
