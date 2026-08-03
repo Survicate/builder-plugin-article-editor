@@ -1,0 +1,86 @@
+body {
+  background: #f5f4f9;
+  color: #15121f;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  margin: 0;
+  padding: 24px;
+}
+
+.harness-header h1 {
+  font-size: 20px;
+  margin: 0 0 4px;
+}
+
+.harness-header p {
+  color: #5f596f;
+  font-size: 14px;
+  margin: 0 0 20px;
+  max-width: 70ch;
+}
+
+.harness-grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+}
+
+.harness-grid h2 {
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  margin: 0 0 8px;
+  text-transform: uppercase;
+}
+
+.harness-table {
+  background: #ffffff;
+  border-collapse: collapse;
+  border-radius: 8px;
+  font-size: 13px;
+  margin-bottom: 20px;
+  overflow: hidden;
+  width: 100%;
+}
+
+.harness-table th,
+.harness-table td {
+  border-bottom: 1px solid #e7e4ef;
+  padding: 6px 10px;
+  text-align: left;
+}
+
+.harness-table td + td {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  width: 80px;
+}
+
+.harness-table .is-kept td:last-child {
+  color: #1d7a4f;
+  font-weight: 600;
+}
+
+.harness-table .is-lost td {
+  background: #fdf2f4;
+}
+
+.harness-table .is-lost td:last-child {
+  color: #b3324a;
+  font-weight: 700;
+}
+
+.harness-output {
+  background: #ffffff;
+  border: 1px solid #e7e4ef;
+  border-radius: 8px;
+  font-size: 12px;
+  max-height: 420px;
+  overflow: auto;
+  padding: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}

@@ -15,5 +15,5 @@
     "target": "ES2019",
     "baseUrl": "."
   },
-  "include": ["src", "*.config.ts"]
+  "include": ["src", "dev", "*.config.ts"]
 }
