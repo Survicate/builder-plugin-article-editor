@@ -8,6 +8,7 @@ import { ArticleImage } from '@/extensions/ArticleImage';
 import { Figcaption, Figure } from '@/extensions/Figure';
 import { PasteCleanup } from '@/extensions/PasteCleanup';
 import { SlashCommands } from '@/extensions/SlashCommands';
+import { SpanClass } from '@/extensions/SpanClass';
 
 export interface CreateArticleEditorOptions {
   content: string;
@@ -30,6 +31,7 @@ export const ARTICLE_EXTENSIONS = [
   ArticleImage,
   Figure,
   Figcaption,
+  SpanClass,
   SlashCommands,
   PasteCleanup,
 ];

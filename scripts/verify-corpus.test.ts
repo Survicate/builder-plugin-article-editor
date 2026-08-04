@@ -56,6 +56,59 @@ const STABLE_COUNTS = [
   { label: 'embeds', selector: '[data-article-embed]' },
 ];
 
+/**
+ * Attributes the blog renderer keeps when it sanitizes an article
+ * (ARTICLE_RICH_TEXT_WHITELIST in the site's rich-text-utils). Anything the
+ * renderer throws away is ours to drop; anything it keeps has to survive a
+ * round-trip through the editor untouched.
+ *
+ * Defaults such as colspan="1" or start="1" are dropped on the way out because
+ * they mean the same as leaving the attribute off, so they are ignored here.
+ *
+ * Links are checked by address instead of by count: a link is a mark rather
+ * than an element, so one that wraps several paragraphs comes back as one link
+ * per paragraph, and two neighbouring links to the same page come back merged.
+ * Both keep every word linked to the same place, so only a vanished address is
+ * a real loss - that is what the lostLinks check below covers.
+ */
+const ATTRIBUTE_CONTRACT = [
+  { attribute: 'src', label: 'image sources', selector: 'img' },
+  { attribute: 'alt', label: 'image alt text', selector: 'img' },
+  { attribute: 'width', label: 'image widths', selector: 'img' },
+  { attribute: 'height', label: 'image heights', selector: 'img' },
+  { attribute: 'class', label: 'span classes', selector: 'span' },
+  { attribute: 'start', ignore: ['1'], label: 'list start numbers', selector: 'ol' },
+  { attribute: 'colspan', ignore: ['1'], label: 'cell colspans', selector: 'td, th' },
+  { attribute: 'rowspan', ignore: ['1'], label: 'cell rowspans', selector: 'td, th' },
+  { attribute: 'data-article-embed', label: 'embed kinds', selector: '[data-article-embed]' },
+  { attribute: 'data-src', label: 'embed addresses', selector: '[data-article-embed]' },
+  { attribute: 'data-embed-height', label: 'embed heights', selector: '[data-article-embed]' },
+  { attribute: 'data-embed-width', label: 'embed widths', selector: '[data-article-embed]' },
+  { attribute: 'data-embed-title', label: 'embed titles', selector: '[data-article-embed]' },
+];
+
+const attributeTally = (
+  html: string,
+  { attribute, ignore, selector }: { attribute: string; ignore?: string[]; selector: string },
+) => {
+  const tally = new Map<string, number>();
+
+  Array.from(parse(html).querySelectorAll(selector)).forEach((element) => {
+    const value = element.getAttribute(attribute) ?? '';
+
+    if (!value || ignore?.includes(value)) return;
+
+    tally.set(value, (tally.get(value) ?? 0) + 1);
+  });
+
+  return tally;
+};
+
+const tallyDifference = (before: Map<string, number>, after: Map<string, number>) =>
+  [...before.entries()]
+    .filter(([value, count]) => (after.get(value) ?? 0) !== count)
+    .map(([value, count]) => `${value} (${count} -> ${after.get(value) ?? 0})`);
+
 const loadCorpus = (): CorpusPost[] => {
   if (!CORPUS_PATH) return [];
 
@@ -110,6 +163,16 @@ describe('every migrated post survives a round-trip', () => {
         const after = countOf(result, check.selector);
 
         if (before !== after) failures.push(`${slug}: ${check.label} ${before} -> ${after}`);
+      });
+
+      ATTRIBUTE_CONTRACT.forEach((check) => {
+        const changed = tallyDifference(
+          attributeTally(source, check),
+          attributeTally(result, check),
+        );
+
+        if (changed.length)
+          failures.push(`${slug}: ${check.label} ${changed.slice(0, 3).join('; ')}`);
       });
     });
 
