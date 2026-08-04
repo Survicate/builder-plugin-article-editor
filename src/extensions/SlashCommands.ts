@@ -1,5 +1,6 @@
 import { Extension } from '@tiptap/core';
 import Suggestion from '@tiptap/suggestion';
+import { positionNear } from '@/editor/positionNear';
 import { type ArticleTemplate, matchTemplates } from '@/editor/templates';
 
 const MENU_CLASS = 'sv-slash-menu';
@@ -70,14 +71,7 @@ const createMenu = (onPick: (template: ArticleTemplate) => void): MenuState => {
 const positionMenu = (rect: DOMRect | null) => {
   const menu = document.querySelector<HTMLElement>(`.${MENU_CLASS}`);
 
-  if (!menu || !rect) return;
-
-  const spaceBelow = window.innerHeight - rect.bottom;
-  const preferredHeight = Math.min(menu.offsetHeight, 320);
-  const top = spaceBelow < preferredHeight ? rect.top - preferredHeight - 8 : rect.bottom + 8;
-
-  menu.style.left = `${Math.round(rect.left)}px`;
-  menu.style.top = `${Math.round(Math.max(8, top))}px`;
+  if (menu) positionNear(menu, rect);
 };
 
 export const SlashCommands = Extension.create({

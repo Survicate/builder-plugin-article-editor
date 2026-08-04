@@ -1,3 +1,4 @@
+import '@/extensions/ImageUpload';
 import type { Editor, Range } from '@tiptap/core';
 
 export interface ArticleTemplate {
@@ -62,6 +63,16 @@ export const ARTICLE_TEMPLATES: ArticleTemplate[] = [
     label: 'Table',
     run: (editor, range) =>
       chain(editor, range).insertTable({ cols: 3, rows: 3, withHeaderRow: true }).run(),
+  },
+  {
+    group: 'Blocks',
+    hint: 'Upload a picture from your computer',
+    keywords: ['image', 'picture', 'photo', 'screenshot', 'upload'],
+    label: 'Image',
+    run: (editor, range) => {
+      chain(editor, range).run();
+      editor.storage.imageUpload.pickAndInsert();
+    },
   },
   {
     group: 'Blocks',

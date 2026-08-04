@@ -1,23 +1,31 @@
 import type { Editor } from '@tiptap/core';
-import React, { useEffect, useRef, useState } from 'react';
-import { EDITOR_CONTAINER_CLASS, ON_CHANGE_DEBOUNCE_MS } from '@/constants';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { EDITOR_CONTAINER_CLASS, ERROR_DISMISS_MS, ON_CHANGE_DEBOUNCE_MS } from '@/constants';
 import { createArticleEditor } from '@/editor/createArticleEditor';
 import { createToolbar } from '@/editor/toolbar';
+import { type BuilderUploadContext, createImageUploader } from '@/upload/uploadImage';
 import '@/editor/editor-styles.css';
 
 export interface ArticleEditorProps {
+  context?: BuilderUploadContext;
   onChange: (value: string) => void;
   value?: string;
 }
 
-export const ArticleEditor = ({ onChange, value }: ArticleEditorProps) => {
+export const ArticleEditor = ({ context, onChange, value }: ArticleEditorProps) => {
   const hostRef = useRef<HTMLDivElement>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<Editor | null>(null);
   const onChangeRef = useRef(onChange);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const initialContentRef = useRef(value ?? '');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [status, setStatus] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const uploadImage = useMemo(() => createImageUploader(context), [context]);
+  const uploadImageRef = useRef(uploadImage);
 
   useEffect(() => {
     onChangeRef.current = onChange;
@@ -32,12 +40,19 @@ export const ArticleEditor = ({ onChange, value }: ArticleEditorProps) => {
     const editor = createArticleEditor({
       content: initialContentRef.current,
       element: host,
-      onContentError: (error) =>
-        console.warn('[article-editor] content does not match the schema', error),
+      onContentError: (contentError) =>
+        console.warn('[article-editor] content does not match the schema', contentError),
+      onError: (message) => {
+        clearTimeout(errorTimeoutRef.current);
+        setError(message);
+        errorTimeoutRef.current = setTimeout(() => setError(null), ERROR_DISMISS_MS);
+      },
+      onStatus: setStatus,
       onUpdate: (html) => {
         clearTimeout(debounceRef.current);
         debounceRef.current = setTimeout(() => onChangeRef.current(html), ON_CHANGE_DEBOUNCE_MS);
       },
+      uploadImage: uploadImageRef.current,
     });
 
     editorRef.current = editor;
@@ -45,6 +60,7 @@ export const ArticleEditor = ({ onChange, value }: ArticleEditorProps) => {
 
     return () => {
       clearTimeout(debounceRef.current);
+      clearTimeout(errorTimeoutRef.current);
       editor.destroy();
       editorRef.current = null;
       toolbarHost.querySelector('.sv-toolbar')?.remove();
@@ -87,6 +103,16 @@ export const ArticleEditor = ({ onChange, value }: ArticleEditorProps) => {
           {isFullscreen ? '⤡' : '⤢'}
         </button>
       </div>
+      {error === null ? null : (
+        <p className="sv-editor-notice sv-editor-notice--error" role="alert">
+          {error}
+        </p>
+      )}
+      {status === null ? null : (
+        <p className="sv-editor-notice" role="status">
+          {status}
+        </p>
+      )}
       <div className="sv-article-editor__scroll" ref={hostRef} />
     </div>
   );

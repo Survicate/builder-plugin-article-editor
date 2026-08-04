@@ -337,6 +337,125 @@
   padding: 10px;
 }
 
+.sv-image {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 24px 0 0;
+}
+
+.sv-image__picture {
+  border-radius: 12px;
+  height: auto;
+  max-width: 100%;
+}
+
+.sv-image__alt {
+  border: 1px dashed var(--sv-line);
+  border-radius: 8px;
+  color: var(--sv-muted);
+  font-size: 12px;
+  padding: 6px 10px;
+  width: 100%;
+}
+
+.sv-image__alt:focus {
+  border-color: var(--sv-accent);
+  border-style: solid;
+  color: var(--sv-ink);
+  outline: none;
+}
+
+.sv-image:not(.is-selected) .sv-image__alt:placeholder-shown:not(:focus) {
+  opacity: 0.35;
+}
+
+.sv-image.is-selected .sv-image__picture {
+  box-shadow: 0 0 0 2px var(--sv-accent);
+}
+
+.sv-editor-notice {
+  background: var(--sv-accent-soft);
+  border-bottom: 1px solid #e0d8fd;
+  color: var(--sv-ink);
+  flex-shrink: 0;
+  font-size: 12px;
+  margin: 0;
+  padding: 8px 12px;
+}
+
+.sv-editor-notice--error {
+  background: #fdf0f0;
+  border-bottom-color: #f4d4d4;
+  color: #8c2020;
+}
+
+.sv-link-dialog {
+  background: #ffffff;
+  border: 1px solid #e2dff0;
+  border-radius: 10px;
+  box-shadow: 0 12px 32px rgba(21, 18, 31, 0.16);
+  display: flex;
+  flex-direction: column;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  gap: 8px;
+  padding: 10px;
+  position: fixed;
+  width: 320px;
+  z-index: 2147483001;
+}
+
+.sv-link-dialog__input {
+  border: 1px solid #ddd4fc;
+  border-radius: 8px;
+  font-size: 13px;
+  padding: 8px 10px;
+  width: 100%;
+}
+
+.sv-link-dialog__input:focus {
+  border-color: var(--sv-accent);
+  outline: none;
+}
+
+.sv-link-dialog__actions {
+  display: flex;
+  gap: 6px;
+}
+
+.sv-link-dialog__apply {
+  background: var(--sv-accent);
+  border: 0;
+  border-radius: 6px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  height: 28px;
+  padding: 0 12px;
+}
+
+.sv-link-dialog__remove {
+  background: transparent;
+  border: 1px solid #e2dff0;
+  border-radius: 6px;
+  color: #6b6480;
+  cursor: pointer;
+  font-size: 12px;
+  height: 28px;
+  padding: 0 12px;
+}
+
+.sv-link-dialog__remove:hover {
+  border-color: #d8b4b4;
+  color: #8c2020;
+}
+
 .sv-toolbar__insert {
   background: var(--sv-accent);
   border: 0;

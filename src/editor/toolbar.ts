@@ -1,4 +1,6 @@
+import '@/extensions/ImageUpload';
 import type { Editor } from '@tiptap/core';
+import { openLinkDialog } from '@/editor/linkDialog';
 
 interface ToolbarItem {
   isActive?: (editor: Editor) => boolean;
@@ -52,6 +54,13 @@ const ITEMS: (ToolbarItem | typeof SEPARATOR)[] = [
     run: (editor) => editor.chain().focus().toggleItalic().run(),
     title: 'Italic',
   },
+  {
+    isActive: (editor) => editor.isActive('link'),
+    label: 'Link',
+    run: (editor) => openLinkDialog(editor),
+    title: 'Add or edit a link (⌘K)',
+    wide: true,
+  },
   SEPARATOR,
   {
     isActive: (editor) => editor.isActive('bulletList'),
@@ -79,6 +88,12 @@ const ITEMS: (ToolbarItem | typeof SEPARATOR)[] = [
     run: (editor) =>
       editor.chain().focus().insertTable({ cols: 3, rows: 3, withHeaderRow: true }).run(),
     title: 'Insert table',
+  },
+  {
+    label: 'Image',
+    run: (editor) => editor.storage.imageUpload.pickAndInsert(),
+    title: 'Upload an image from your computer',
+    wide: true,
   },
 ];
 
