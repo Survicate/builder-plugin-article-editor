@@ -41,6 +41,19 @@ const CHECKS = [
   { label: 'quotes', selector: 'blockquote' },
 ];
 
+/**
+ * Stands in for the Builder asset library so uploading, dropping and pasting
+ * pictures can be tried without a dashboard session.
+ */
+const uploadToDataUrl = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.addEventListener('load', () => resolve(String(reader.result)));
+    reader.addEventListener('error', () => reject(new Error(`Could not read ${file.name}`)));
+    reader.readAsDataURL(file);
+  });
+
 const Harness = () => {
   const [edited, setEdited] = useState<string | null>(null);
   const serialized = useMemo(() => serializeThroughSchema(SAMPLE_ARTICLE), []);
@@ -58,7 +71,11 @@ const Harness = () => {
       <div className="harness-grid">
         <section>
           <h2>Editor</h2>
-          <ArticleEditor onChange={setEdited} value={SAMPLE_ARTICLE} />
+          <ArticleEditor
+            onChange={setEdited}
+            uploadImage={uploadToDataUrl}
+            value={SAMPLE_ARTICLE}
+          />
         </section>
         <section>
           <h2>Round-trip</h2>

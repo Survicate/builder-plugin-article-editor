@@ -3,16 +3,23 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { EDITOR_CONTAINER_CLASS, ERROR_DISMISS_MS, ON_CHANGE_DEBOUNCE_MS } from '@/constants';
 import { createArticleEditor } from '@/editor/createArticleEditor';
 import { createToolbar } from '@/editor/toolbar';
-import { type BuilderUploadContext, createImageUploader } from '@/upload/uploadImage';
+import { type BuilderUploadContext, createImageUploader, type UploadImage } from '@/upload/uploadImage';
 import '@/editor/editor-styles.css';
 
 export interface ArticleEditorProps {
   context?: BuilderUploadContext;
   onChange: (value: string) => void;
+  /** Overrides the Builder upload, so the local harness can exercise images offline. */
+  uploadImage?: UploadImage | null;
   value?: string;
 }
 
-export const ArticleEditor = ({ context, onChange, value }: ArticleEditorProps) => {
+export const ArticleEditor = ({
+  context,
+  onChange,
+  uploadImage: uploadImageOverride,
+  value,
+}: ArticleEditorProps) => {
   const hostRef = useRef<HTMLDivElement>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<Editor | null>(null);
@@ -24,7 +31,10 @@ export const ArticleEditor = ({ context, onChange, value }: ArticleEditorProps) 
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const uploadImage = useMemo(() => createImageUploader(context), [context]);
+  const uploadImage = useMemo(
+    () => uploadImageOverride ?? createImageUploader(context),
+    [context, uploadImageOverride],
+  );
   const uploadImageRef = useRef(uploadImage);
 
   useEffect(() => {

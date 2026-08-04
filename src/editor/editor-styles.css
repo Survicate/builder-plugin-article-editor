@@ -1,4 +1,7 @@
-.sv-article-editor {
+/* The floating panels are appended to the body, so they need the palette too. */
+.sv-article-editor,
+.sv-link-dialog,
+.sv-slash-menu {
   --sv-ink: #15121f;
   --sv-muted: #6b6480;
   --sv-line: #d9d7e0;
@@ -6,7 +9,9 @@
   --sv-accent-soft: #f4f1fe;
   --sv-surface: #ffffff;
   --sv-surface-muted: #f7f6fb;
+}
 
+.sv-article-editor {
   background: var(--sv-surface);
   border: 1px solid var(--sv-line);
   border-radius: 8px;
