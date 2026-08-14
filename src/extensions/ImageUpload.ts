@@ -1,5 +1,6 @@
 import { Extension } from '@tiptap/core';
 import { Plugin, PluginKey } from '@tiptap/pm/state';
+import { measureImage } from '@/upload/measureImage';
 import type { UploadImage } from '@/upload/uploadImage';
 
 export interface ImageUploadOptions {
@@ -58,11 +59,13 @@ export const ImageUpload = Extension.create<ImageUploadOptions, ImageUploadStora
         let at = position ?? this.editor.state.selection.from;
 
         for (const file of files) {
+          const size = await measureImage(file);
           const src = await upload(file);
+          const dimensions = size ? { height: String(size.height), width: String(size.width) } : {};
 
           this.editor
             .chain()
-            .insertContentAt(at, { attrs: { alt: '', src }, type: 'articleImage' })
+            .insertContentAt(at, { attrs: { alt: '', src, ...dimensions }, type: 'articleImage' })
             .run();
           at += 1;
         }

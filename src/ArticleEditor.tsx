@@ -1,9 +1,14 @@
 import type { Editor } from '@tiptap/core';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { EDITOR_CONTAINER_CLASS, ERROR_DISMISS_MS, ON_CHANGE_DEBOUNCE_MS } from '@/constants';
-import { createArticleEditor } from '@/editor/createArticleEditor';
+import { createArticleEditor, serializeEditor } from '@/editor/createArticleEditor';
+import { normalizeIncomingHtml } from '@/editor/normalizeIncomingHtml';
 import { createToolbar } from '@/editor/toolbar';
-import { type BuilderUploadContext, createImageUploader, type UploadImage } from '@/upload/uploadImage';
+import {
+  type BuilderUploadContext,
+  createImageUploader,
+  type UploadImage,
+} from '@/upload/uploadImage';
 import '@/editor/editor-styles.css';
 
 export interface ArticleEditorProps {
@@ -27,6 +32,7 @@ export const ArticleEditor = ({
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const initialContentRef = useRef(value ?? '');
+  const lastEmittedRef = useRef(value ?? '');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -36,10 +42,25 @@ export const ArticleEditor = ({
     [context, uploadImageOverride],
   );
   const uploadImageRef = useRef(uploadImage);
+  const stableUploadRef = useRef<UploadImage>((file) => {
+    const upload = uploadImageRef.current;
+
+    if (!upload) {
+      return Promise.reject(
+        new Error('Uploading images needs the Builder editor, which supplies the login'),
+      );
+    }
+
+    return upload(file);
+  });
 
   useEffect(() => {
     onChangeRef.current = onChange;
   }, [onChange]);
+
+  useEffect(() => {
+    uploadImageRef.current = uploadImage;
+  }, [uploadImage]);
 
   useEffect(() => {
     const host = hostRef.current;
@@ -60,9 +81,12 @@ export const ArticleEditor = ({
       onStatus: setStatus,
       onUpdate: (html) => {
         clearTimeout(debounceRef.current);
-        debounceRef.current = setTimeout(() => onChangeRef.current(html), ON_CHANGE_DEBOUNCE_MS);
+        debounceRef.current = setTimeout(() => {
+          lastEmittedRef.current = html;
+          onChangeRef.current(html);
+        }, ON_CHANGE_DEBOUNCE_MS);
       },
-      uploadImage: uploadImageRef.current,
+      uploadImage: uploadImageRef.current ? stableUploadRef.current : null,
     });
 
     editorRef.current = editor;
@@ -80,9 +104,20 @@ export const ArticleEditor = ({
   useEffect(() => {
     const editor = editorRef.current;
 
-    if (!editor || value === undefined || value === editor.getHTML()) return;
+    if (!editor || value === undefined) return;
 
-    editor.commands.setContent(value, { emitUpdate: false });
+    if (value === lastEmittedRef.current) return;
+
+    if (editor.isFocused) return;
+
+    if (value === serializeEditor(editor)) {
+      lastEmittedRef.current = value;
+
+      return;
+    }
+
+    editor.commands.setContent(normalizeIncomingHtml(value), { emitUpdate: false });
+    lastEmittedRef.current = value;
   }, [value]);
 
   useEffect(() => {

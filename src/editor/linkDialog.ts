@@ -4,48 +4,90 @@ import { positionNear, selectionRect } from '@/editor/positionNear';
 
 const DIALOG_CLASS = 'sv-link-dialog';
 
-export const applyLink = (editor: Editor, rawHref: string) => {
+export interface LinkOptions {
+  newTab?: boolean;
+  nofollow?: boolean;
+}
+
+export const applyLink = (editor: Editor, rawHref: string, options: LinkOptions = {}) => {
   const href = normalizeHref(rawHref);
   const chain = editor.chain().focus().extendMarkRange('link');
 
   if (!href) return chain.unsetLink().run();
 
+  const attrs = {
+    href,
+    rel: options.nofollow === true ? 'nofollow' : null,
+    target: options.newTab === true ? '_blank' : null,
+  };
+
   if (editor.state.selection.empty) {
     return chain
-      .insertContent({ marks: [{ attrs: { href }, type: 'link' }], text: href, type: 'text' })
+      .insertContent({ marks: [{ attrs, type: 'link' }], text: href, type: 'text' })
       .run();
   }
 
-  return chain.setLink({ href }).run();
+  return chain.setLink(attrs).run();
 };
 
-const buildDialog = (currentHref: string, onApply: (href: string) => void, onClose: () => void) => {
+const buildCheckbox = (labelText: string, checked: boolean) => {
+  const label = document.createElement('label');
+  const checkbox = document.createElement('input');
+
+  label.className = `${DIALOG_CLASS}__option`;
+  checkbox.type = 'checkbox';
+  checkbox.checked = checked;
+  label.append(checkbox, document.createTextNode(labelText));
+
+  return { checkbox, label };
+};
+
+interface CurrentLink {
+  href: string;
+  newTab: boolean;
+  nofollow: boolean;
+}
+
+const buildDialog = (
+  current: CurrentLink,
+  onApply: (href: string, options: LinkOptions) => void,
+  onClose: () => void,
+) => {
   const dialog = document.createElement('div');
   const input = document.createElement('input');
+  const options = document.createElement('div');
   const actions = document.createElement('div');
   const apply = document.createElement('button');
+  const newTab = buildCheckbox('Open in a new tab', current.newTab);
+  const nofollow = buildCheckbox('Ask search engines not to follow (nofollow)', current.nofollow);
 
   dialog.className = DIALOG_CLASS;
   input.className = `${DIALOG_CLASS}__input`;
   input.type = 'text';
   input.placeholder = 'Paste an address or type /pricing/';
-  input.value = currentHref;
+  input.value = current.href;
+  options.className = `${DIALOG_CLASS}__options`;
+  options.append(newTab.label, nofollow.label);
   actions.className = `${DIALOG_CLASS}__actions`;
   apply.type = 'button';
   apply.className = `${DIALOG_CLASS}__apply`;
-  apply.textContent = currentHref ? 'Update' : 'Add link';
+  apply.textContent = current.href ? 'Update' : 'Add link';
+
+  const submit = () =>
+    onApply(input.value, { newTab: newTab.checkbox.checked, nofollow: nofollow.checkbox.checked });
+
   apply.addEventListener('mousedown', (event) => event.preventDefault());
-  apply.addEventListener('click', () => onApply(input.value));
+  apply.addEventListener('click', submit);
   actions.append(apply);
 
-  if (currentHref) {
+  if (current.href) {
     const remove = document.createElement('button');
 
     remove.type = 'button';
     remove.className = `${DIALOG_CLASS}__remove`;
     remove.textContent = 'Remove';
     remove.addEventListener('mousedown', (event) => event.preventDefault());
-    remove.addEventListener('click', () => onApply(''));
+    remove.addEventListener('click', () => onApply('', {}));
     actions.append(remove);
   }
 
@@ -54,7 +96,7 @@ const buildDialog = (currentHref: string, onApply: (href: string) => void, onClo
 
     if (event.key === 'Enter') {
       event.preventDefault();
-      onApply(input.value);
+      submit();
     }
 
     if (event.key === 'Escape') {
@@ -63,7 +105,7 @@ const buildDialog = (currentHref: string, onApply: (href: string) => void, onClo
     }
   });
 
-  dialog.append(input, actions);
+  dialog.append(input, options, actions);
 
   return { dialog, input };
 };
@@ -71,7 +113,12 @@ const buildDialog = (currentHref: string, onApply: (href: string) => void, onClo
 export const openLinkDialog = (editor: Editor) => {
   document.querySelector(`.${DIALOG_CLASS}`)?.remove();
 
-  const currentHref = (editor.getAttributes('link').href as string | undefined) ?? '';
+  const attributes = editor.getAttributes('link');
+  const current: CurrentLink = {
+    href: (attributes.href as string | undefined) ?? '',
+    newTab: attributes.target === '_blank',
+    nofollow: ((attributes.rel as string | undefined) ?? '').includes('nofollow'),
+  };
   const anchor = selectionRect(editor);
 
   const close = () => {
@@ -85,9 +132,9 @@ export const openLinkDialog = (editor: Editor) => {
   };
 
   const { dialog, input } = buildDialog(
-    currentHref,
-    (value) => {
-      applyLink(editor, value);
+    current,
+    (value, options) => {
+      applyLink(editor, value, options);
       close();
     },
     () => close(),

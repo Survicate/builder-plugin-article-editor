@@ -84,6 +84,40 @@ describe('applyLink', () => {
       '<a href="https://survicate.com/blog/">https://survicate.com/blog/</a>',
     );
   });
+
+  it('opens in a new tab only when asked to', () => {
+    const active = setup('<p>Read the pricing page</p>');
+
+    active.commands.setTextSelection({ from: 1, to: 5 });
+    applyLink(active, 'https://example.com', { newTab: true });
+
+    expect(serializeEditor(active)).toContain('target="_blank"');
+  });
+
+  it('marks the link nofollow only when asked to, without smuggling in noopener', () => {
+    const active = setup('<p>Read the pricing page</p>');
+
+    active.commands.setTextSelection({ from: 1, to: 5 });
+    applyLink(active, 'https://example.com', { nofollow: true });
+
+    const html = serializeEditor(active);
+
+    expect(html).toContain('rel="nofollow"');
+    expect(html).not.toContain('noopener');
+    expect(html).not.toContain('target=');
+  });
+
+  it('clears target and rel when the boxes are unticked on an existing link', () => {
+    const active = setup('<p><a href="/old/" rel="nofollow" target="_blank">Pricing</a></p>');
+
+    active.commands.setTextSelection(3);
+    applyLink(active, '/old/', {});
+
+    const html = serializeEditor(active);
+
+    expect(html).not.toContain('target=');
+    expect(html).not.toContain('rel=');
+  });
 });
 
 describe('openLinkDialog', () => {
@@ -109,6 +143,23 @@ describe('openLinkDialog', () => {
 
     expect(input?.value).toBe('/pricing/');
     expect(document.querySelector('.sv-link-dialog__remove')).not.toBeNull();
+  });
+
+  it('preselects the options the link already carries', () => {
+    const active = setup(
+      '<p><a href="https://example.com" rel="nofollow" target="_blank">Pricing</a></p>',
+    );
+
+    active.commands.setTextSelection(3);
+    openLinkDialog(active);
+
+    const boxes = document.querySelectorAll<HTMLInputElement>(
+      '.sv-link-dialog__option input[type="checkbox"]',
+    );
+
+    expect(boxes).toHaveLength(2);
+    expect(boxes[0].checked).toBe(true);
+    expect(boxes[1].checked).toBe(true);
   });
 
   it('replaces an already open dialog instead of stacking them', () => {

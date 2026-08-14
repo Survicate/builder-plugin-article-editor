@@ -16,14 +16,19 @@ interface UploadResponse {
 /**
  * Uploads to the space's asset library with the signed-in user's own
  * credentials, which Builder hands to a plugin through the app context. The
- * plugin never sees or stores an API key of its own.
+ * headers are read again on every upload, because Builder refreshes them
+ * during a session and a snapshot taken at mount goes stale.
  */
 export const createImageUploader = (context?: BuilderUploadContext): UploadImage | null => {
-  const authHeaders = context?.user?.authHeaders;
-
-  if (!authHeaders || !Object.keys(authHeaders).length) return null;
+  if (!context) return null;
 
   return async (file: File): Promise<string> => {
+    const authHeaders = context.user?.authHeaders;
+
+    if (!authHeaders || !Object.keys(authHeaders).length) {
+      throw new Error('The Builder session is still loading — try the upload again in a moment');
+    }
+
     const endpoint = `${UPLOAD_ENDPOINT}?name=${encodeURIComponent(file.name)}`;
     const response = await fetch(endpoint, {
       body: file,

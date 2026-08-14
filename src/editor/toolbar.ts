@@ -5,6 +5,7 @@ import { openLinkDialog } from '@/editor/linkDialog';
 interface ToolbarItem {
   isActive?: (editor: Editor) => boolean;
   isDisabled?: (editor: Editor) => boolean;
+  isHidden?: (editor: Editor) => boolean;
   label: string;
   run: (editor: Editor) => void;
   title: string;
@@ -83,7 +84,7 @@ const ITEMS: (ToolbarItem | typeof SEPARATOR)[] = [
   },
   SEPARATOR,
   {
-    isActive: (editor) => editor.isActive('table'),
+    isHidden: (editor) => editor.isActive('table'),
     label: '▦',
     run: (editor) =>
       editor.chain().focus().insertTable({ cols: 3, rows: 3, withHeaderRow: true }).run(),
@@ -93,6 +94,45 @@ const ITEMS: (ToolbarItem | typeof SEPARATOR)[] = [
     label: 'Image',
     run: (editor) => editor.storage.imageUpload.pickAndInsert(),
     title: 'Upload an image from your computer',
+    wide: true,
+  },
+];
+
+const TABLE_ITEMS: ToolbarItem[] = [
+  {
+    label: '+ row',
+    run: (editor) => editor.chain().focus().addRowAfter().run(),
+    title: 'Add a row below the current one',
+    wide: true,
+  },
+  {
+    label: '+ col',
+    run: (editor) => editor.chain().focus().addColumnAfter().run(),
+    title: 'Add a column to the right',
+    wide: true,
+  },
+  {
+    label: '− row',
+    run: (editor) => editor.chain().focus().deleteRow().run(),
+    title: 'Delete the current row',
+    wide: true,
+  },
+  {
+    label: '− col',
+    run: (editor) => editor.chain().focus().deleteColumn().run(),
+    title: 'Delete the current column',
+    wide: true,
+  },
+  {
+    label: 'Header',
+    run: (editor) => editor.chain().focus().toggleHeaderRow().run(),
+    title: 'Toggle the header row',
+    wide: true,
+  },
+  {
+    label: '✕ table',
+    run: (editor) => editor.chain().focus().deleteTable().run(),
+    title: 'Delete the whole table',
     wide: true,
   },
 ];
@@ -151,7 +191,17 @@ export const createToolbar = (editor: Editor): HTMLElement => {
     updaters.push(() => {
       button.classList.toggle('is-active', item.isActive?.(editor) === true);
       button.disabled = item.isDisabled?.(editor) === true;
+      button.hidden = item.isHidden?.(editor) === true;
     });
+  });
+
+  const tableGroup = document.createElement('span');
+
+  tableGroup.className = 'sv-toolbar__group';
+  TABLE_ITEMS.forEach((item) => tableGroup.append(createButton(item, editor)));
+  toolbar.append(tableGroup);
+  updaters.push(() => {
+    tableGroup.hidden = !editor.isActive('table');
   });
 
   const update = () => updaters.forEach((updater) => updater());

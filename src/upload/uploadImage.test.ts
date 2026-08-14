@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { createImageUploader } from '@/upload/uploadImage';
+import { type BuilderUploadContext, createImageUploader } from '@/upload/uploadImage';
 
 const context = { user: { authHeaders: { Authorization: 'Bearer test-token' } } };
 
@@ -16,10 +16,31 @@ const respondWith = (body: unknown, ok = true, status = 200) =>
 afterEach(() => vi.unstubAllGlobals());
 
 describe('createImageUploader', () => {
-  it('returns nothing without a signed-in Builder user', () => {
+  it('returns nothing outside the Builder editor', () => {
     expect(createImageUploader(undefined)).toBeNull();
-    expect(createImageUploader({})).toBeNull();
-    expect(createImageUploader({ user: { authHeaders: {} } })).toBeNull();
+  });
+
+  it('asks for a retry while the Builder session is still loading', async () => {
+    const upload = createImageUploader({});
+
+    await expect(upload?.(file())).rejects.toThrow('still loading');
+  });
+
+  it('reads the credentials again on every upload, so a late login still works', async () => {
+    const fetchMock = respondWith({ url: 'https://cdn.builder.io/api/v1/image/assets%2Fchart' });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const lateContext: BuilderUploadContext = {};
+    const upload = createImageUploader(lateContext);
+
+    lateContext.user = { authHeaders: { Authorization: 'Bearer refreshed-token' } };
+
+    await upload?.(file());
+
+    const [, options] = fetchMock.mock.calls[0];
+
+    expect(options.headers.Authorization).toBe('Bearer refreshed-token');
   });
 
   it('sends the file with the user credentials and returns the asset address', async () => {

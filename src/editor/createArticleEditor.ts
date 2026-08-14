@@ -1,4 +1,4 @@
-import { Editor,type Extensions } from '@tiptap/core';
+import { Editor, type Extensions } from '@tiptap/core';
 import { TableKit } from '@tiptap/extension-table';
 import StarterKit from '@tiptap/starter-kit';
 import { normalizeIncomingHtml } from '@/editor/normalizeIncomingHtml';
@@ -9,6 +9,7 @@ import { Figcaption, Figure } from '@/extensions/Figure';
 import { ImageUpload } from '@/extensions/ImageUpload';
 import { LinkShortcut } from '@/extensions/LinkShortcut';
 import { PasteCleanup } from '@/extensions/PasteCleanup';
+import { PasteImageUpload } from '@/extensions/PasteImageUpload';
 import { SlashCommands } from '@/extensions/SlashCommands';
 import { SpanClass } from '@/extensions/SpanClass';
 import type { UploadImage } from '@/upload/uploadImage';
@@ -56,6 +57,11 @@ export const createArticleExtensions = ({
     upload: uploadImage ?? null,
   }),
   PasteCleanup,
+  PasteImageUpload.configure({
+    onError: onError ?? (() => undefined),
+    onStatus: onStatus ?? (() => undefined),
+    upload: uploadImage ?? null,
+  }),
 ];
 
 export const ARTICLE_EXTENSIONS = createArticleExtensions();

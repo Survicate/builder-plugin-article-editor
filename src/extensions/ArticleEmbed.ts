@@ -35,25 +35,13 @@ export const ArticleEmbed = Node.create({
       const source = (node.attrs['data-src'] as string | null) ?? '';
       const dom = document.createElement('div');
       const label = document.createElement('span');
+      const input = document.createElement('input');
 
       dom.className = 'sv-embed-card';
       dom.dataset.embedKind = kind;
       dom.contentEditable = 'false';
       label.className = 'sv-embed-card__label';
       label.textContent = EMBED_LABELS[kind] ?? 'Embedded content';
-      dom.append(label);
-
-      if (source) {
-        const url = document.createElement('span');
-
-        url.className = 'sv-embed-card__url';
-        url.textContent = source;
-        dom.append(url);
-
-        return { dom };
-      }
-
-      const input = document.createElement('input');
 
       input.className = 'sv-embed-card__input';
       input.placeholder = 'Paste the embed address, starting with https://';
@@ -75,7 +63,33 @@ export const ArticleEmbed = Node.create({
           })
           .run();
       });
-      dom.append(input);
+
+      const showInput = () => {
+        input.value = source;
+        dom.replaceChildren(label, input);
+        input.focus();
+      };
+
+      if (!source) {
+        dom.replaceChildren(label, input);
+
+        return { dom };
+      }
+
+      const url = document.createElement('span');
+      const edit = document.createElement('button');
+
+      url.className = 'sv-embed-card__url';
+      url.textContent = source;
+      edit.type = 'button';
+      edit.className = 'sv-embed-card__edit';
+      edit.textContent = 'Change address';
+      edit.addEventListener('mousedown', (event) => event.stopPropagation());
+      edit.addEventListener('click', showInput);
+      input.addEventListener('blur', () => {
+        if (input.value.trim() === source) dom.replaceChildren(label, url, edit);
+      });
+      dom.replaceChildren(label, url, edit);
 
       return { dom };
     };
