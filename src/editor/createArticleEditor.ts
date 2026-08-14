@@ -5,6 +5,8 @@ import { normalizeIncomingHtml } from '@/editor/normalizeIncomingHtml';
 import { serializeArticleHtml } from '@/editor/serializeArticleHtml';
 import { ArticleEmbed } from '@/extensions/ArticleEmbed';
 import { ArticleImage } from '@/extensions/ArticleImage';
+import { AuthorQuote } from '@/extensions/AuthorQuote';
+import { DataGraph } from '@/extensions/DataGraph';
 import { ExpertRoundtable } from '@/extensions/ExpertRoundtable';
 import { Figcaption, Figure } from '@/extensions/Figure';
 import { ImageUpload } from '@/extensions/ImageUpload';
@@ -51,6 +53,11 @@ export const createArticleExtensions = ({
     onError: onError ?? (() => undefined),
     upload: uploadImage ?? null,
   }),
+  AuthorQuote.configure({
+    onError: onError ?? (() => undefined),
+    upload: uploadImage ?? null,
+  }),
+  DataGraph,
   Figure,
   Figcaption,
   SpanClass,

@@ -1,6 +1,9 @@
 import '@/extensions/ImageUpload';
 import type { Editor, Range } from '@tiptap/core';
-import { EMPTY_EXPERT, serializeExperts } from '@/extensions/ExpertRoundtable';
+import { EMPTY_AUTHOR_QUOTE } from '@/extensions/AuthorQuote';
+import { serializeBlockData } from '@/extensions/blockData';
+import { EMPTY_GRAPH } from '@/extensions/DataGraph';
+import { EMPTY_EXPERT } from '@/extensions/ExpertRoundtable';
 
 export interface ArticleTemplate {
   group: 'Text' | 'Blocks' | 'Embeds';
@@ -83,8 +86,39 @@ export const ARTICLE_TEMPLATES: ArticleTemplate[] = [
     run: (editor, range) =>
       chain(editor, range)
         .insertContent({
-          attrs: { 'data-block-data': serializeExperts([{ ...EMPTY_EXPERT }]) },
+          attrs: { 'data-block-data': serializeBlockData([{ ...EMPTY_EXPERT }]) },
           type: 'expertRoundtable',
+        })
+        .run(),
+  },
+  {
+    group: 'Blocks',
+    hint: 'One highlighted quote with the author and photo',
+    keywords: ['quote', 'author', 'testimonial', 'pull'],
+    label: 'Quote with author',
+    run: (editor, range) =>
+      chain(editor, range)
+        .insertContent({
+          attrs: { 'data-block-data': serializeBlockData({ ...EMPTY_AUTHOR_QUOTE }) },
+          type: 'authorQuote',
+        })
+        .run(),
+  },
+  {
+    group: 'Blocks',
+    hint: 'Horizontal bars for percentages',
+    keywords: ['graph', 'chart', 'bars', 'data', 'stats'],
+    label: 'Data graph',
+    run: (editor, range) =>
+      chain(editor, range)
+        .insertContent({
+          attrs: {
+            'data-block-data': serializeBlockData({
+              ...EMPTY_GRAPH,
+              bars: [{ label: '', value: 0 }],
+            }),
+          },
+          type: 'dataGraph',
         })
         .run(),
   },

@@ -426,6 +426,11 @@
   box-shadow: 0 0 0 2px rgba(108, 75, 244, 0.25);
 }
 
+.sv-graph__value {
+  flex: 0 0 72px;
+  width: 72px;
+}
+
 .sv-slash-menu {
   background: #ffffff;
   border: 1px solid #e2dff0;

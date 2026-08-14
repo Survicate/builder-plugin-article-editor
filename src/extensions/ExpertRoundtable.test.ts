@@ -1,11 +1,8 @@
 import type { Editor } from '@tiptap/core';
 import { afterEach, describe, expect, it } from 'vitest';
 import { createArticleEditor, serializeEditor } from '@/editor/createArticleEditor';
-import {
-  EXPERT_ROUNDTABLE_KIND,
-  parseExperts,
-  serializeExperts,
-} from '@/extensions/ExpertRoundtable';
+import { serializeBlockData } from '@/extensions/blockData';
+import { EXPERT_ROUNDTABLE_KIND, parseExperts } from '@/extensions/ExpertRoundtable';
 
 let editor: Editor | null = null;
 
@@ -42,7 +39,7 @@ const EXPERTS = [
 
 describe('ExpertRoundtable', () => {
   it('round-trips the block with its experts untouched', () => {
-    const payload = serializeExperts(EXPERTS);
+    const payload = serializeBlockData(EXPERTS);
     const html = `<div data-article-block="${EXPERT_ROUNDTABLE_KIND}" data-block-data="${payload.replace(/"/g, '&quot;')}"></div>`;
     const active = setup(`<p>Before</p>${html}<p>After</p>`);
     const out = serializeEditor(active);
@@ -64,7 +61,7 @@ describe('ExpertRoundtable', () => {
     active
       .chain()
       .insertContent({
-        attrs: { 'data-block-data': serializeExperts(EXPERTS) },
+        attrs: { 'data-block-data': serializeBlockData(EXPERTS) },
         type: 'expertRoundtable',
       })
       .run();

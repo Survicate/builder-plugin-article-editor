@@ -1,4 +1,11 @@
 import { mergeAttributes, Node } from '@tiptap/core';
+import {
+  blockDataAttribute,
+  blockKindAttribute,
+  serializeBlockData,
+  textOf,
+} from '@/extensions/blockData';
+import { buildAvatarButton, buildField } from '@/extensions/blockFields';
 import type { UploadImage } from '@/upload/uploadImage';
 
 export const EXPERT_ROUNDTABLE_KIND = 'expert-roundtable';
@@ -16,8 +23,6 @@ export interface ExpertRoundtableOptions {
 }
 
 export const EMPTY_EXPERT: RoundtableExpert = { avatar: '', name: '', quote: '', role: '' };
-
-const textOf = (value: unknown): string => (typeof value === 'string' ? value : '');
 
 export const parseExperts = (raw: string | null | undefined): RoundtableExpert[] => {
   if (!raw) return [];
@@ -42,63 +47,11 @@ export const parseExperts = (raw: string | null | undefined): RoundtableExpert[]
   }
 };
 
-export const serializeExperts = (experts: RoundtableExpert[]): string =>
-  JSON.stringify(experts).replace(/</g, '\\u003c').replace(/>/g, '\\u003e');
-
-const pickImage = (): Promise<File | null> =>
-  new Promise((resolve) => {
-    const input = document.createElement('input');
-
-    input.type = 'file';
-    input.accept = 'image/*';
-    input.addEventListener('change', () => resolve(input.files?.[0] ?? null));
-    input.addEventListener('cancel', () => resolve(null));
-    input.click();
-  });
-
-const stopEditorEvents = (element: HTMLElement) => {
-  element.addEventListener('mousedown', (event) => event.stopPropagation());
-  element.addEventListener('keydown', (event) => event.stopPropagation());
-};
-
-const buildField = (
-  className: string,
-  placeholder: string,
-  value: string,
-  onCommit: (next: string) => void,
-  multiline = false,
-) => {
-  const field = multiline ? document.createElement('textarea') : document.createElement('input');
-
-  field.className = className;
-  field.placeholder = placeholder;
-  field.value = value;
-
-  if (field instanceof HTMLTextAreaElement) field.rows = 3;
-
-  stopEditorEvents(field);
-  field.addEventListener('change', () => onCommit(field.value.trim()));
-
-  return field;
-};
-
 export const ExpertRoundtable = Node.create<ExpertRoundtableOptions>({
   addAttributes() {
     return {
-      'data-article-block': {
-        default: EXPERT_ROUNDTABLE_KIND,
-        parseHTML: () => EXPERT_ROUNDTABLE_KIND,
-        renderHTML: () => ({ 'data-article-block': EXPERT_ROUNDTABLE_KIND }),
-      },
-      'data-block-data': {
-        default: serializeExperts([EMPTY_EXPERT]),
-        parseHTML: (element: HTMLElement) => element.getAttribute('data-block-data'),
-        renderHTML: (attributes: Record<string, unknown>) => {
-          const value = attributes['data-block-data'];
-
-          return typeof value === 'string' && value ? { 'data-block-data': value } : {};
-        },
-      },
+      'data-article-block': blockKindAttribute(EXPERT_ROUNDTABLE_KIND),
+      'data-block-data': blockDataAttribute(serializeBlockData([EMPTY_EXPERT])),
     };
   },
 
@@ -121,7 +74,7 @@ export const ExpertRoundtable = Node.create<ExpertRoundtableOptions>({
         editor
           .chain()
           .command(({ tr }) => {
-            tr.setNodeAttribute(position, 'data-block-data', serializeExperts(experts));
+            tr.setNodeAttribute(position, 'data-block-data', serializeBlockData(experts));
 
             return true;
           })
@@ -130,47 +83,19 @@ export const ExpertRoundtable = Node.create<ExpertRoundtableOptions>({
 
       const buildRow = (expert: RoundtableExpert) => {
         const row = document.createElement('div');
-        const avatar = document.createElement('button');
-        const picture = document.createElement('img');
         const fields = document.createElement('div');
         const remove = document.createElement('button');
-
-        const refreshAvatar = () => {
-          picture.src = expert.avatar;
-          avatar.classList.toggle('has-photo', Boolean(expert.avatar));
-        };
-
-        row.className = 'sv-roundtable__row';
-        avatar.type = 'button';
-        avatar.className = 'sv-roundtable__avatar';
-        avatar.title = 'Upload a photo';
-        picture.className = 'sv-roundtable__photo';
-        picture.alt = '';
-        avatar.append(picture);
-        refreshAvatar();
-        avatar.addEventListener('mousedown', (event) => event.preventDefault());
-        avatar.addEventListener('click', () => {
-          const { onError, upload } = this.options;
-
-          if (!upload) {
-            onError('Uploading photos needs the Builder editor, which supplies the login');
-
-            return;
-          }
-
-          void pickImage().then(async (file) => {
-            if (!file) return;
-
-            try {
-              expert.avatar = await upload(file);
-              refreshAvatar();
-              commit();
-            } catch (error) {
-              onError(error instanceof Error ? error.message : 'The photo upload failed');
-            }
-          });
+        const avatar = buildAvatarButton({
+          avatar: expert.avatar,
+          onError: this.options.onError,
+          onUploaded: (url) => {
+            expert.avatar = url;
+            commit();
+          },
+          upload: this.options.upload,
         });
 
+        row.className = 'sv-roundtable__row';
         fields.className = 'sv-roundtable__fields';
         fields.append(
           buildField('sv-roundtable__input', 'Name', expert.name, (next) => {
