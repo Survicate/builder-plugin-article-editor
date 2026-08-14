@@ -54,6 +54,22 @@ const uploadToDataUrl = (file: File) =>
     reader.readAsDataURL(file);
   });
 
+/** Stands in for the Builder content search behind the link dialog. */
+const SITE_LINKS = [
+  { path: '/pricing/', title: 'Pricing' },
+  { path: '/product/nps-software/', title: 'NPS Software' },
+  { path: '/blog/csat-vs-nps/', title: 'CSAT vs NPS: which one to choose' },
+  {
+    path: '/blog/customer-satisfaction-survey-questions/',
+    title: 'Customer satisfaction survey questions',
+  },
+];
+
+const searchFixtureLinks = (query: string) =>
+  Promise.resolve(
+    SITE_LINKS.filter((link) => link.title.toLowerCase().includes(query.trim().toLowerCase())),
+  );
+
 const Harness = () => {
   const [edited, setEdited] = useState<string | null>(null);
   const serialized = useMemo(() => serializeThroughSchema(SAMPLE_ARTICLE), []);
@@ -73,6 +89,7 @@ const Harness = () => {
           <h2>Editor</h2>
           <ArticleEditor
             onChange={setEdited}
+            searchLinks={searchFixtureLinks}
             uploadImage={uploadToDataUrl}
             value={SAMPLE_ARTICLE}
           />

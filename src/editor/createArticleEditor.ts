@@ -10,11 +10,13 @@ import { DataGraph } from '@/extensions/DataGraph';
 import { ExpertRoundtable } from '@/extensions/ExpertRoundtable';
 import { Figcaption, Figure } from '@/extensions/Figure';
 import { ImageUpload } from '@/extensions/ImageUpload';
+import { LinkSearch } from '@/extensions/LinkSearch';
 import { LinkShortcut } from '@/extensions/LinkShortcut';
 import { PasteCleanup } from '@/extensions/PasteCleanup';
 import { PasteImageUpload } from '@/extensions/PasteImageUpload';
 import { SlashCommands } from '@/extensions/SlashCommands';
 import { SpanClass } from '@/extensions/SpanClass';
+import type { SearchSiteLinks } from '@/search/searchSiteLinks';
 import type { UploadImage } from '@/upload/uploadImage';
 
 export interface CreateArticleEditorOptions {
@@ -24,18 +26,21 @@ export interface CreateArticleEditorOptions {
   onError?: (message: string) => void;
   onStatus?: (message: string | null) => void;
   onUpdate: (html: string) => void;
+  searchLinks?: SearchSiteLinks | null;
   uploadImage?: UploadImage | null;
 }
 
 interface ExtensionOptions {
   onError?: (message: string) => void;
   onStatus?: (message: string | null) => void;
+  searchLinks?: SearchSiteLinks | null;
   uploadImage?: UploadImage | null;
 }
 
 export const createArticleExtensions = ({
   onError,
   onStatus,
+  searchLinks,
   uploadImage,
 }: ExtensionOptions = {}): Extensions => [
   StarterKit.configure({
@@ -68,6 +73,7 @@ export const createArticleExtensions = ({
     onStatus: onStatus ?? (() => undefined),
     upload: uploadImage ?? null,
   }),
+  LinkSearch.configure({ search: searchLinks ?? null }),
   PasteCleanup,
   PasteImageUpload.configure({
     onError: onError ?? (() => undefined),
@@ -85,13 +91,14 @@ export const createArticleEditor = ({
   onError,
   onStatus,
   onUpdate,
+  searchLinks,
   uploadImage,
 }: CreateArticleEditorOptions): Editor =>
   new Editor({
     content: normalizeIncomingHtml(content),
     element,
     emitContentError: true,
-    extensions: createArticleExtensions({ onError, onStatus, uploadImage }),
+    extensions: createArticleExtensions({ onError, onStatus, searchLinks, uploadImage }),
     onContentError: ({ error }) => onContentError(error),
     onUpdate: ({ editor }) => onUpdate(serializeArticleHtml(editor.getHTML())),
   });

@@ -1,8 +1,11 @@
 import type { Editor } from '@tiptap/core';
 import { normalizeHref } from '@/editor/normalizeHref';
 import { positionNear, selectionRect } from '@/editor/positionNear';
+import type { SearchSiteLinks, SiteLink } from '@/search/searchSiteLinks';
 
 const DIALOG_CLASS = 'sv-link-dialog';
+const SEARCH_DEBOUNCE_MS = 250;
+const MIN_SEARCH_LENGTH = 2;
 
 export interface LinkOptions {
   newTab?: boolean;
@@ -48,8 +51,63 @@ interface CurrentLink {
   nofollow: boolean;
 }
 
+const buildSearchResults = (input: HTMLInputElement, search: SearchSiteLinks) => {
+  const results = document.createElement('div');
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  let requestId = 0;
+
+  results.className = `${DIALOG_CLASS}__results`;
+
+  const render = (links: SiteLink[]) => {
+    results.replaceChildren();
+    links.forEach((link) => {
+      const option = document.createElement('button');
+      const title = document.createElement('span');
+      const path = document.createElement('span');
+
+      option.type = 'button';
+      option.className = `${DIALOG_CLASS}__result`;
+      title.className = `${DIALOG_CLASS}__result-title`;
+      title.textContent = link.title;
+      path.className = `${DIALOG_CLASS}__result-path`;
+      path.textContent = link.path;
+      option.append(title, path);
+      option.addEventListener('mousedown', (event) => event.preventDefault());
+      option.addEventListener('click', () => {
+        input.value = link.path;
+        results.replaceChildren();
+        input.focus();
+      });
+      results.append(option);
+    });
+  };
+
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+
+    const term = input.value.trim();
+
+    if (term.length < MIN_SEARCH_LENGTH || /^https?:\/\//i.test(term)) {
+      render([]);
+
+      return;
+    }
+
+    timer = setTimeout(() => {
+      const id = ++requestId;
+
+      void search(term).then((links) => {
+        if (id === requestId) render(links);
+      });
+    }, SEARCH_DEBOUNCE_MS);
+  });
+
+  return results;
+};
+
 const buildDialog = (
   current: CurrentLink,
+  search: SearchSiteLinks | null,
   onApply: (href: string, options: LinkOptions) => void,
   onClose: () => void,
 ) => {
@@ -105,7 +163,11 @@ const buildDialog = (
     }
   });
 
-  dialog.append(input, options, actions);
+  dialog.append(input);
+
+  if (search) dialog.append(buildSearchResults(input, search));
+
+  dialog.append(options, actions);
 
   return { dialog, input };
 };
@@ -133,6 +195,7 @@ export const openLinkDialog = (editor: Editor) => {
 
   const { dialog, input } = buildDialog(
     current,
+    editor.storage.linkSearch?.search ?? null,
     (value, options) => {
       applyLink(editor, value, options);
       close();

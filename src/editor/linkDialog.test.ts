@@ -170,4 +170,41 @@ describe('openLinkDialog', () => {
 
     expect(document.querySelectorAll('.sv-link-dialog')).toHaveLength(1);
   });
+
+  it('shows no search area when Builder did not supply a search source', () => {
+    const active = setup('<p>Read the pricing page</p>');
+
+    openLinkDialog(active);
+
+    expect(document.querySelector('.sv-link-dialog__results')).toBeNull();
+  });
+
+  it('suggests site links while typing and fills the address on pick', async () => {
+    editor = createArticleEditor({
+      content: '<p>Read the pricing page</p>',
+      element: document.createElement('div'),
+      onContentError: () => undefined,
+      onUpdate: () => undefined,
+      searchLinks: () => Promise.resolve([{ path: '/pricing/', title: 'Pricing' }]),
+    });
+    editor.commands.focus();
+    openLinkDialog(editor);
+
+    const input = document.querySelector<HTMLInputElement>('.sv-link-dialog__input');
+
+    if (!input) throw new Error('The dialog input did not render');
+
+    input.value = 'pri';
+    input.dispatchEvent(new Event('input'));
+    await new Promise((resolve) => {
+      setTimeout(resolve, 350);
+    });
+
+    const result = document.querySelector<HTMLButtonElement>('.sv-link-dialog__result');
+
+    expect(result?.textContent).toContain('Pricing');
+    expect(result?.textContent).toContain('/pricing/');
+    result?.click();
+    expect(input.value).toBe('/pricing/');
+  });
 });

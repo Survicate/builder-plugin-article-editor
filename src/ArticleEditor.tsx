@@ -5,6 +5,11 @@ import { createArticleEditor, serializeEditor } from '@/editor/createArticleEdit
 import { normalizeIncomingHtml } from '@/editor/normalizeIncomingHtml';
 import { createToolbar } from '@/editor/toolbar';
 import {
+  type BuilderSearchContext,
+  createSiteLinkSearch,
+  type SearchSiteLinks,
+} from '@/search/searchSiteLinks';
+import {
   type BuilderUploadContext,
   createImageUploader,
   type UploadImage,
@@ -12,8 +17,10 @@ import {
 import '@/editor/editor-styles.css';
 
 export interface ArticleEditorProps {
-  context?: BuilderUploadContext;
+  context?: BuilderUploadContext & BuilderSearchContext;
   onChange: (value: string) => void;
+  /** Overrides the Builder link search, so the local harness can exercise it offline. */
+  searchLinks?: SearchSiteLinks | null;
   /** Overrides the Builder upload, so the local harness can exercise images offline. */
   uploadImage?: UploadImage | null;
   value?: string;
@@ -22,6 +29,7 @@ export interface ArticleEditorProps {
 export const ArticleEditor = ({
   context,
   onChange,
+  searchLinks: searchLinksOverride,
   uploadImage: uploadImageOverride,
   value,
 }: ArticleEditorProps) => {
@@ -42,6 +50,11 @@ export const ArticleEditor = ({
     [context, uploadImageOverride],
   );
   const uploadImageRef = useRef(uploadImage);
+  const searchLinks = useMemo(
+    () => searchLinksOverride ?? createSiteLinkSearch(context),
+    [context, searchLinksOverride],
+  );
+  const searchLinksRef = useRef(searchLinks);
   const stableUploadRef = useRef<UploadImage>((file) => {
     const upload = uploadImageRef.current;
 
@@ -86,6 +99,7 @@ export const ArticleEditor = ({
           onChangeRef.current(html);
         }, ON_CHANGE_DEBOUNCE_MS);
       },
+      searchLinks: searchLinksRef.current,
       uploadImage: uploadImageRef.current ? stableUploadRef.current : null,
     });
 

@@ -581,6 +581,45 @@
   outline: none;
 }
 
+.sv-link-dialog__results {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.sv-link-dialog__results:empty {
+  display: none;
+}
+
+.sv-link-dialog__result {
+  background: transparent;
+  border: 0;
+  border-radius: 7px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 6px 8px;
+  text-align: left;
+}
+
+.sv-link-dialog__result:hover {
+  background: var(--sv-accent-soft);
+}
+
+.sv-link-dialog__result-title {
+  color: var(--sv-ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sv-link-dialog__result-path {
+  color: var(--sv-muted);
+  font-size: 11px;
+}
+
 .sv-link-dialog__options {
   display: flex;
   flex-direction: column;
