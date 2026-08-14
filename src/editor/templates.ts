@@ -1,5 +1,6 @@
 import '@/extensions/ImageUpload';
 import type { Editor, Range } from '@tiptap/core';
+import { EMPTY_EXPERT, serializeExperts } from '@/extensions/ExpertRoundtable';
 
 export interface ArticleTemplate {
   group: 'Text' | 'Blocks' | 'Embeds';
@@ -73,6 +74,19 @@ export const ARTICLE_TEMPLATES: ArticleTemplate[] = [
       chain(editor, range).run();
       editor.storage.imageUpload.pickAndInsert();
     },
+  },
+  {
+    group: 'Blocks',
+    hint: 'Quotes from a few experts, with photos',
+    keywords: ['expert', 'roundtable', 'interview', 'panel', 'quotes'],
+    label: 'Expert roundtable',
+    run: (editor, range) =>
+      chain(editor, range)
+        .insertContent({
+          attrs: { 'data-block-data': serializeExperts([{ ...EMPTY_EXPERT }]) },
+          type: 'expertRoundtable',
+        })
+        .run(),
   },
   {
     group: 'Blocks',

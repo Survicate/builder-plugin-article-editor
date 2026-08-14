@@ -305,6 +305,127 @@
   background: #ffffff;
 }
 
+.sv-roundtable {
+  background: var(--sv-accent-soft);
+  border: 1px solid #ddd4fc;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 24px 0 0;
+  padding: 14px 16px;
+}
+
+.sv-roundtable__label {
+  color: var(--sv-accent);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.sv-roundtable__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sv-roundtable__row {
+  align-items: flex-start;
+  display: flex;
+  gap: 10px;
+}
+
+.sv-roundtable__avatar {
+  background: #ffffff;
+  border: 1px dashed var(--sv-line);
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+  height: 36px;
+  overflow: hidden;
+  padding: 0;
+  width: 36px;
+}
+
+.sv-roundtable__avatar.has-photo {
+  border-style: solid;
+}
+
+.sv-roundtable__photo {
+  display: none;
+  height: 100%;
+  object-fit: cover;
+  width: 100%;
+}
+
+.sv-roundtable__avatar.has-photo .sv-roundtable__photo {
+  display: block;
+}
+
+.sv-roundtable__fields {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sv-roundtable__input,
+.sv-roundtable__quote {
+  background: #ffffff;
+  border: 1px solid #ddd4fc;
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  padding: 7px 10px;
+  width: 100%;
+}
+
+.sv-roundtable__quote {
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.sv-roundtable__input:focus,
+.sv-roundtable__quote:focus {
+  border-color: var(--sv-accent);
+  outline: none;
+}
+
+.sv-roundtable__remove {
+  background: transparent;
+  border: 0;
+  color: var(--sv-muted);
+  cursor: pointer;
+  font-size: 13px;
+  padding: 4px;
+}
+
+.sv-roundtable__remove:hover {
+  color: #8c2020;
+}
+
+.sv-roundtable__add {
+  align-self: flex-start;
+  background: transparent;
+  border: 1px solid #ddd4fc;
+  border-radius: 6px;
+  color: var(--sv-accent);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 10px;
+}
+
+.sv-roundtable__add:hover {
+  background: #ffffff;
+}
+
+.sv-roundtable.ProseMirror-selectednode {
+  border-color: var(--sv-accent);
+  box-shadow: 0 0 0 2px rgba(108, 75, 244, 0.25);
+}
+
 .sv-slash-menu {
   background: #ffffff;
   border: 1px solid #e2dff0;

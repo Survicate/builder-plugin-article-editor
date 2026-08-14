@@ -5,6 +5,7 @@ import { normalizeIncomingHtml } from '@/editor/normalizeIncomingHtml';
 import { serializeArticleHtml } from '@/editor/serializeArticleHtml';
 import { ArticleEmbed } from '@/extensions/ArticleEmbed';
 import { ArticleImage } from '@/extensions/ArticleImage';
+import { ExpertRoundtable } from '@/extensions/ExpertRoundtable';
 import { Figcaption, Figure } from '@/extensions/Figure';
 import { ImageUpload } from '@/extensions/ImageUpload';
 import { LinkShortcut } from '@/extensions/LinkShortcut';
@@ -46,6 +47,10 @@ export const createArticleExtensions = ({
   TableKit.configure({ table: { resizable: true } }),
   ArticleEmbed,
   ArticleImage,
+  ExpertRoundtable.configure({
+    onError: onError ?? (() => undefined),
+    upload: uploadImage ?? null,
+  }),
   Figure,
   Figcaption,
   SpanClass,
