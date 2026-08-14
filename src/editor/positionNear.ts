@@ -1,7 +1,6 @@
 import type { Editor } from '@tiptap/core';
 
 const EDGE_GAP = 8;
-const MAX_HEIGHT = 320;
 
 /**
  * Places a floating panel next to a point in the text, flipping it above when
@@ -11,7 +10,7 @@ export const positionNear = (element: HTMLElement, rect: DOMRect | null) => {
   if (!rect) return;
 
   const spaceBelow = window.innerHeight - rect.bottom;
-  const height = Math.min(element.offsetHeight, MAX_HEIGHT);
+  const height = element.offsetHeight;
   const top = spaceBelow < height ? rect.top - height - EDGE_GAP : rect.bottom + EDGE_GAP;
   const rightEdge = window.innerWidth - element.offsetWidth - EDGE_GAP;
   const left = Math.min(Math.max(EDGE_GAP, rect.left), Math.max(EDGE_GAP, rightEdge));

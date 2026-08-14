@@ -1,6 +1,7 @@
 import '@/extensions/ImageUpload';
 import type { Editor } from '@tiptap/core';
 import { openLinkDialog } from '@/editor/linkDialog';
+import { openInsertMenu } from '@/editor/templateMenu';
 
 interface ToolbarItem {
   isActive?: (editor: Editor) => boolean;
@@ -156,9 +157,9 @@ const createInsertButton = (editor: Editor) => {
   button.type = 'button';
   button.className = 'sv-toolbar__insert';
   button.textContent = '+ Insert';
-  button.title = 'Insert a template (or type / in the text)';
+  button.title = 'Pick a block to insert (or type / in the text)';
   button.addEventListener('mousedown', (event) => event.preventDefault());
-  button.addEventListener('click', () => editor.chain().focus().insertContent('/').run());
+  button.addEventListener('click', () => openInsertMenu(editor, button));
 
   return button;
 };

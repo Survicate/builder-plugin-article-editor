@@ -437,8 +437,9 @@
     BlinkMacSystemFont,
     'Segoe UI',
     sans-serif;
-  max-height: 320px;
+  max-height: min(60vh, 560px);
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 6px;
   position: fixed;
   width: 280px;
