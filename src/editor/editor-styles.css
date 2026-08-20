@@ -197,6 +197,7 @@
 
 .sv-article-editor .ProseMirror blockquote {
   background: var(--sv-accent-soft);
+  clear: both;
   border: 1px solid #e0d8fd;
   border-radius: 16px;
   margin: 24px 0 0;
@@ -226,6 +227,7 @@
 
 .sv-article-editor .ProseMirror table {
   border: 1px solid #e5e2ee;
+  clear: both;
   border-collapse: collapse;
   border-radius: 12px;
   font-size: 14px;
@@ -260,6 +262,7 @@
 }
 
 .sv-embed-card {
+  clear: both;
   align-items: flex-start;
   background: var(--sv-accent-soft);
   border: 1px solid #ddd4fc;
