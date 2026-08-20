@@ -20,6 +20,18 @@ describe('isForeignImageSrc', () => {
     expect(isForeignImageSrc('blob:https://builder.io/123')).toBe(false);
     expect(isForeignImageSrc('data:text/html,hello')).toBe(false);
   });
+
+  it('never fetches from local or private network addresses', () => {
+    expect(isForeignImageSrc('http://localhost:8080/admin.png')).toBe(false);
+    expect(isForeignImageSrc('http://127.0.0.1/x.png')).toBe(false);
+    expect(isForeignImageSrc('http://10.0.0.5/x.png')).toBe(false);
+    expect(isForeignImageSrc('http://192.168.1.1/x.png')).toBe(false);
+    expect(isForeignImageSrc('http://172.20.3.4/x.png')).toBe(false);
+    expect(isForeignImageSrc('http://169.254.169.254/latest/meta-data/')).toBe(false);
+    expect(isForeignImageSrc('http://[::1]/x.png')).toBe(false);
+    expect(isForeignImageSrc('http://intranet/x.png')).toBe(false);
+    expect(isForeignImageSrc('http://nas.local/x.png')).toBe(false);
+  });
 });
 
 describe('fileNameForSrc', () => {

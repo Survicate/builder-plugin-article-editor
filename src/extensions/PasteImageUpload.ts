@@ -12,6 +12,9 @@ export interface PasteImageUploadOptions {
 const BUILDER_CDN_HOSTNAME = 'cdn.builder.io';
 const FALLBACK_FILE_STEM = 'pasted-image';
 const FILE_EXTENSION = /\.[a-z0-9]{2,5}$/i;
+const MAX_IMAGE_BYTES = 20 * 1024 * 1024;
+const PRIVATE_HOST =
+  /^(localhost$|127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|0\.0\.0\.0$|\[|[^.]+$|.+\.(local|internal)$)/i;
 
 export const isForeignImageSrc = (src: string): boolean => {
   if (src.startsWith('data:image/')) return true;
@@ -19,7 +22,11 @@ export const isForeignImageSrc = (src: string): boolean => {
   if (!/^https?:\/\//i.test(src)) return false;
 
   try {
-    return new URL(src).hostname !== BUILDER_CDN_HOSTNAME;
+    const { hostname } = new URL(src);
+
+    if (hostname === BUILDER_CDN_HOSTNAME) return false;
+
+    return !PRIVATE_HOST.test(hostname);
   } catch {
     return false;
   }
@@ -49,6 +56,8 @@ const fetchImageFile = async (src: string): Promise<File> => {
   const blob = await response.blob();
 
   if (!blob.type.startsWith('image/')) throw new Error('The address is not an image');
+
+  if (blob.size > MAX_IMAGE_BYTES) throw new Error('The image is larger than 20 MB');
 
   return new File([blob], fileNameForSrc(src, blob.type), { type: blob.type });
 };

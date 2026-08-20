@@ -33,14 +33,16 @@ export const ArticleEditor = ({
   uploadImage: uploadImageOverride,
   value,
 }: ArticleEditorProps) => {
+  const externalValue = value === undefined || value === null ? undefined : String(value);
   const hostRef = useRef<HTMLDivElement>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<Editor | null>(null);
   const onChangeRef = useRef(onChange);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  const pendingHtmlRef = useRef<string | null>(null);
   const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const initialContentRef = useRef(value ?? '');
-  const lastEmittedRef = useRef(value ?? '');
+  const initialContentRef = useRef(externalValue ?? '');
+  const lastEmittedRef = useRef(externalValue ?? '');
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -55,6 +57,11 @@ export const ArticleEditor = ({
     [context, searchLinksOverride],
   );
   const searchLinksRef = useRef(searchLinks);
+  const stableSearchRef = useRef<SearchSiteLinks>((query) => {
+    const search = searchLinksRef.current;
+
+    return search ? search(query) : Promise.resolve([]);
+  });
   const stableUploadRef = useRef<UploadImage>((file) => {
     const upload = uploadImageRef.current;
 
@@ -76,6 +83,10 @@ export const ArticleEditor = ({
   }, [uploadImage]);
 
   useEffect(() => {
+    searchLinksRef.current = searchLinks;
+  }, [searchLinks]);
+
+  useEffect(() => {
     const host = hostRef.current;
     const toolbarHost = toolbarRef.current;
 
@@ -94,12 +105,14 @@ export const ArticleEditor = ({
       onStatus: setStatus,
       onUpdate: (html) => {
         clearTimeout(debounceRef.current);
+        pendingHtmlRef.current = html;
         debounceRef.current = setTimeout(() => {
+          pendingHtmlRef.current = null;
           lastEmittedRef.current = html;
           onChangeRef.current(html);
         }, ON_CHANGE_DEBOUNCE_MS);
       },
-      searchLinks: searchLinksRef.current,
+      searchLinks: stableSearchRef.current,
       uploadImage: uploadImageRef.current ? stableUploadRef.current : null,
     });
 
@@ -109,6 +122,15 @@ export const ArticleEditor = ({
     return () => {
       clearTimeout(debounceRef.current);
       clearTimeout(errorTimeoutRef.current);
+
+      const pending = pendingHtmlRef.current;
+
+      if (pending !== null) {
+        pendingHtmlRef.current = null;
+        lastEmittedRef.current = pending;
+        onChangeRef.current(pending);
+      }
+
       editor.destroy();
       editorRef.current = null;
       toolbarHost.querySelector('.sv-toolbar')?.remove();
@@ -118,21 +140,21 @@ export const ArticleEditor = ({
   useEffect(() => {
     const editor = editorRef.current;
 
-    if (!editor || value === undefined) return;
+    if (!editor || externalValue === undefined) return;
 
-    if (value === lastEmittedRef.current) return;
+    if (externalValue === lastEmittedRef.current) return;
 
     if (editor.isFocused) return;
 
-    if (value === serializeEditor(editor)) {
-      lastEmittedRef.current = value;
+    if (externalValue === serializeEditor(editor)) {
+      lastEmittedRef.current = externalValue;
 
       return;
     }
 
-    editor.commands.setContent(normalizeIncomingHtml(value), { emitUpdate: false });
-    lastEmittedRef.current = value;
-  }, [value]);
+    editor.commands.setContent(normalizeIncomingHtml(externalValue), { emitUpdate: false });
+    lastEmittedRef.current = externalValue;
+  }, [externalValue]);
 
   useEffect(() => {
     if (!isFullscreen) return;

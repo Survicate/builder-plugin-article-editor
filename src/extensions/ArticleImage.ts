@@ -1,4 +1,5 @@
 import { mergeAttributes, Node } from '@tiptap/core';
+import { dropUnsafeHref } from '@/editor/normalizeHref';
 
 const plainAttribute = (name: string) => ({
   parseHTML: (element: HTMLElement) => element.getAttribute(name),
@@ -14,12 +15,18 @@ const linkAttribute = (name: string) => ({
   renderHTML: () => ({}),
 });
 
+const linkHrefAttribute = () => ({
+  parseHTML: (element: HTMLElement) =>
+    dropUnsafeHref(element.closest('a[href]')?.getAttribute('href') ?? null),
+  renderHTML: () => ({}),
+});
+
 export const ArticleImage = Node.create({
   addAttributes() {
     return {
       alt: plainAttribute('alt'),
       height: plainAttribute('height'),
-      href: linkAttribute('href'),
+      href: linkHrefAttribute(),
       src: plainAttribute('src'),
       target: linkAttribute('target'),
       width: plainAttribute('width'),
