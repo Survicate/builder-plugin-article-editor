@@ -29,6 +29,29 @@ describe('matchTemplates', () => {
 });
 
 describe('article templates', () => {
+  it('offers every heading level the blog styles, down to h5', () => {
+    const editor = mountEditor();
+
+    for (const [label, tag] of [
+      ['Heading', '<h2>'],
+      ['Sub heading', '<h3>'],
+      ['Small heading', '<h4>'],
+      ['Smallest heading', '<h5>'],
+    ] as const) {
+      editor.commands.setContent('<p>Structure</p>');
+      editor.commands.selectAll();
+      ARTICLE_TEMPLATES.find((template) => template.label === label)?.run(editor);
+      expect(serializeEditor(editor)).toContain(tag);
+    }
+
+    editor.destroy();
+  });
+
+  it('finds the new heading levels by their tag names', () => {
+    expect(matchTemplates('h4')[0].label).toBe('Small heading');
+    expect(matchTemplates('h5')[0].label).toBe('Smallest heading');
+  });
+
   it('inserts a survey embed the migration pipeline would recognise', () => {
     const editor = mountEditor();
     const survey = ARTICLE_TEMPLATES.find((template) => template.label === 'Survicate survey');

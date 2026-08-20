@@ -43,6 +43,20 @@ const ITEMS: (ToolbarItem | typeof SEPARATOR)[] = [
     title: 'Sub heading',
     wide: true,
   },
+  {
+    isActive: (editor) => editor.isActive('heading', { level: 4 }),
+    label: 'H4',
+    run: (editor) => editor.chain().focus().toggleHeading({ level: 4 }).run(),
+    title: 'Small heading',
+    wide: true,
+  },
+  {
+    isActive: (editor) => editor.isActive('heading', { level: 5 }),
+    label: 'H5',
+    run: (editor) => editor.chain().focus().toggleHeading({ level: 5 }).run(),
+    title: 'Smallest heading',
+    wide: true,
+  },
   SEPARATOR,
   {
     isActive: (editor) => editor.isActive('bold'),

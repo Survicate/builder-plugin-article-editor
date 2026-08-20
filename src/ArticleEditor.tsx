@@ -44,6 +44,7 @@ export const ArticleEditor = ({
   const initialContentRef = useRef(externalValue ?? '');
   const lastEmittedRef = useRef(externalValue ?? '');
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [sourceDraft, setSourceDraft] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -140,7 +141,7 @@ export const ArticleEditor = ({
   useEffect(() => {
     const editor = editorRef.current;
 
-    if (!editor || externalValue === undefined) return;
+    if (!editor || externalValue === undefined || sourceDraft !== null) return;
 
     if (externalValue === lastEmittedRef.current) return;
 
@@ -154,7 +155,29 @@ export const ArticleEditor = ({
 
     editor.commands.setContent(normalizeIncomingHtml(externalValue), { emitUpdate: false });
     lastEmittedRef.current = externalValue;
-  }, [externalValue]);
+  }, [externalValue, sourceDraft]);
+
+  const openSourceView = () => {
+    const editor = editorRef.current;
+
+    if (editor) setSourceDraft(serializeEditor(editor));
+  };
+
+  const applySourceView = () => {
+    const editor = editorRef.current;
+
+    if (!editor || sourceDraft === null) return;
+
+    editor.commands.setContent(normalizeIncomingHtml(sourceDraft), { emitUpdate: true });
+    setSourceDraft(null);
+
+    const kept = serializeEditor(editor);
+
+    if (kept !== sourceDraft.trim()) {
+      setStatus('Some of the pasted markup was adjusted to the article format');
+      setTimeout(() => setStatus(null), ERROR_DISMISS_MS);
+    }
+  };
 
   useEffect(() => {
     if (!isFullscreen) return;
@@ -183,6 +206,14 @@ export const ArticleEditor = ({
         >
           {isFullscreen ? '⤡' : '⤢'}
         </button>
+        <button
+          className="sv-toolbar__button sv-toolbar__button--source"
+          onClick={() => (sourceDraft === null ? openSourceView() : setSourceDraft(null))}
+          title={sourceDraft === null ? 'Edit the HTML source' : 'Back to the editor'}
+          type="button"
+        >
+          {'</>'}
+        </button>
       </div>
       {error === null ? null : (
         <p className="sv-editor-notice sv-editor-notice--error" role="alert">
@@ -194,7 +225,30 @@ export const ArticleEditor = ({
           {status}
         </p>
       )}
-      <div className="sv-article-editor__scroll" ref={hostRef} />
+      <div className="sv-article-editor__scroll" hidden={sourceDraft !== null} ref={hostRef} />
+      {sourceDraft !== null && (
+        <div className="sv-source-view">
+          <textarea
+            aria-label="Article HTML source"
+            className="sv-source-view__textarea"
+            onChange={(event) => setSourceDraft(event.target.value)}
+            spellCheck={false}
+            value={sourceDraft}
+          />
+          <div className="sv-source-view__actions">
+            <button className="sv-toolbar__button" onClick={applySourceView} type="button">
+              Apply
+            </button>
+            <button
+              className="sv-toolbar__button"
+              onClick={() => setSourceDraft(null)}
+              type="button"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

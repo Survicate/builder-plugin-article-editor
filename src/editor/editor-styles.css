@@ -154,6 +154,19 @@
   margin: 24px 0 0;
 }
 
+.sv-article-editor .ProseMirror h5 {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 24px 0 0;
+}
+
+.sv-article-editor .ProseMirror h1,
+.sv-article-editor .ProseMirror h6 {
+  font-size: 16px;
+  font-weight: 700;
+  margin: 24px 0 0;
+}
+
 .sv-article-editor .ProseMirror a {
   color: var(--sv-accent);
   text-decoration: none;
@@ -712,4 +725,38 @@
 
 .sv-meta-text__count--warn {
   color: #a15c00;
+}
+
+.sv-source-view {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+  padding: 12px;
+}
+
+.sv-source-view__textarea {
+  border: 1px solid var(--sv-border);
+  border-radius: 8px;
+  color: var(--sv-text);
+  flex: 1;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12.5px;
+  line-height: 1.5;
+  min-height: 220px;
+  padding: 10px 12px;
+  resize: vertical;
+}
+
+.sv-source-view__textarea:focus {
+  border-color: var(--sv-accent);
+  outline: none;
+}
+
+.sv-source-view__actions {
+  display: flex;
+  flex-shrink: 0;
+  gap: 8px;
+  justify-content: flex-end;
 }

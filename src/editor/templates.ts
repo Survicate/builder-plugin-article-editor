@@ -41,6 +41,20 @@ export const ARTICLE_TEMPLATES: ArticleTemplate[] = [
   },
   {
     group: 'Text',
+    hint: 'Small title for a nested point',
+    keywords: ['h4', 'heading', 'small'],
+    label: 'Small heading',
+    run: (editor, range) => chain(editor, range).setNode('heading', { level: 4 }).run(),
+  },
+  {
+    group: 'Text',
+    hint: 'Smallest title, for fine structure',
+    keywords: ['h5', 'heading', 'smallest', 'tiny'],
+    label: 'Smallest heading',
+    run: (editor, range) => chain(editor, range).setNode('heading', { level: 5 }).run(),
+  },
+  {
+    group: 'Text',
     hint: 'Bulleted list',
     keywords: ['bullet', 'list', 'ul'],
     label: 'Bulleted list',
