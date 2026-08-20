@@ -3,9 +3,14 @@ const FALLBACK_CONTENT_TYPE = 'application/octet-stream';
 
 export interface BuilderUploadContext {
   user?: {
+    apiKey?: string;
     authHeaders?: Record<string, string>;
+    organization?: { value?: { id?: string } };
   };
 }
+
+const spaceApiKey = (context: BuilderUploadContext): string | undefined =>
+  context.user?.apiKey ?? context.user?.organization?.value?.id;
 
 export type UploadImage = (file: File) => Promise<string>;
 
@@ -29,7 +34,9 @@ export const createImageUploader = (context?: BuilderUploadContext): UploadImage
       throw new Error('The Builder session is still loading — try the upload again in a moment');
     }
 
-    const endpoint = `${UPLOAD_ENDPOINT}?name=${encodeURIComponent(file.name)}`;
+    const apiKey = spaceApiKey(context);
+    const keyParam = apiKey ? `&apiKey=${encodeURIComponent(apiKey)}` : '';
+    const endpoint = `${UPLOAD_ENDPOINT}?name=${encodeURIComponent(file.name)}${keyParam}`;
     const response = await fetch(endpoint, {
       body: file,
       headers: { ...authHeaders, 'Content-Type': file.type || FALLBACK_CONTENT_TYPE },

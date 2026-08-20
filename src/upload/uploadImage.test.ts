@@ -61,6 +61,38 @@ describe('createImageUploader', () => {
     expect(options.headers['Content-Type']).toBe('image/png');
   });
 
+  it('scopes the upload to the space with the user api key', async () => {
+    const fetchMock = respondWith({ url: 'https://cdn.builder.io/api/v1/image/assets%2Fchart' });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const upload = createImageUploader({
+      user: { ...context.user, apiKey: 'space-key' },
+    });
+
+    await upload?.(file());
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      'https://builder.io/api/v1/upload?name=chart%20of%20results.png&apiKey=space-key',
+    );
+  });
+
+  it('falls back to the organization id when the user api key is absent', async () => {
+    const fetchMock = respondWith({ url: 'https://cdn.builder.io/api/v1/image/assets%2Fchart' });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const upload = createImageUploader({
+      user: { ...context.user, organization: { value: { id: 'org-id' } } },
+    });
+
+    await upload?.(file());
+
+    expect(fetchMock.mock.calls[0][0]).toBe(
+      'https://builder.io/api/v1/upload?name=chart%20of%20results.png&apiKey=org-id',
+    );
+  });
+
   it('explains a refused upload instead of inserting a broken image', async () => {
     vi.stubGlobal('fetch', respondWith({}, false, 403));
 
