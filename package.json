@@ -1,6 +1,6 @@
 {
   "name": "@survicate/builder-plugin-article-editor",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Long-form article editor for Survicate blog posts in the Builder.io dashboard",
   "license": "MIT",
   "repository": {
