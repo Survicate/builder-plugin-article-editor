@@ -22,8 +22,15 @@ export const ArticleEmbed = Node.create({
   addAttributes() {
     return {
       'data-article-embed': attributeFromData('data-article-embed'),
+      'data-embed-aspect': attributeFromData('data-embed-aspect'),
+      'data-embed-caption': attributeFromData('data-embed-caption'),
+      'data-embed-cta-href': attributeFromData('data-embed-cta-href'),
+      'data-embed-cta-label': attributeFromData('data-embed-cta-label'),
       'data-embed-height': attributeFromData('data-embed-height'),
+      'data-embed-page-url': attributeFromData('data-embed-page-url'),
+      'data-embed-poster': attributeFromData('data-embed-poster'),
       'data-embed-title': attributeFromData('data-embed-title'),
+      'data-embed-variant': attributeFromData('data-embed-variant'),
       'data-embed-width': attributeFromData('data-embed-width'),
       'data-src': attributeFromData('data-src'),
     };

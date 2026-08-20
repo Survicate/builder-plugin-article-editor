@@ -30,6 +30,28 @@ describe('article round-trip', () => {
     expect(result).toContain('data-embed-height="600"');
   });
 
+  it('keeps the embed card attributes the site renderer understands', () => {
+    const embed =
+      '<div data-article-embed="survey" data-src="https://respondent.survicate.com/x/preview.html"' +
+      ' data-embed-variant="page" data-embed-cta-href="https://panel.survicate.com/signup?survey=x"' +
+      ' data-embed-cta-label="Use this template" data-embed-caption="NPS template"' +
+      ' data-embed-aspect="1024:532" data-embed-poster="https://app.arcade.software/og/x"' +
+      ' data-embed-page-url="https://demo.arcade.software/x"></div>';
+    const result = roundTrip(embed);
+
+    for (const attribute of [
+      'data-embed-variant="page"',
+      'data-embed-cta-href=',
+      'data-embed-cta-label="Use this template"',
+      'data-embed-caption="NPS template"',
+      'data-embed-aspect="1024:532"',
+      'data-embed-poster=',
+      'data-embed-page-url=',
+    ]) {
+      expect(result).toContain(attribute);
+    }
+  });
+
   it('keeps every embed kind used by the migrated posts', () => {
     const kinds = ['survey', 'youtube', 'embedly', 'video', 'linkedin', 'arcade'];
     const html = kinds
