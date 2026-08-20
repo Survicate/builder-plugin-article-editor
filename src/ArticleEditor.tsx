@@ -9,6 +9,7 @@ import {
   createSiteLinkSearch,
   type SearchSiteLinks,
 } from '@/search/searchSiteLinks';
+import { prepareImageForUpload } from '@/upload/prepareImageForUpload';
 import {
   type BuilderUploadContext,
   createImageUploader,
@@ -63,16 +64,14 @@ export const ArticleEditor = ({
 
     return search ? search(query) : Promise.resolve([]);
   });
-  const stableUploadRef = useRef<UploadImage>((file) => {
+  const stableUploadRef = useRef<UploadImage>(async (file) => {
     const upload = uploadImageRef.current;
 
     if (!upload) {
-      return Promise.reject(
-        new Error('Uploading images needs the Builder editor, which supplies the login'),
-      );
+      throw new Error('Uploading images needs the Builder editor, which supplies the login');
     }
 
-    return upload(file);
+    return upload(await prepareImageForUpload(file));
   });
 
   useEffect(() => {

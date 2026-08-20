@@ -50,6 +50,31 @@ describe('article round-trip', () => {
     expect(result).toContain('alt="Chart"');
   });
 
+  it('keeps the image alignment choice', () => {
+    const html =
+      '<img src="https://cdn.builder.io/api/v1/image/x" alt="" width="800" height="600" data-align="left">';
+
+    expect(roundTrip(html)).toContain('data-align="left"');
+  });
+
+  it('keeps a linked image with its target', () => {
+    const html =
+      '<a href="https://survicate.com/pricing/" target="_blank">' +
+      '<img src="https://cdn.builder.io/api/v1/image/x" alt=""></a>';
+    const result = roundTrip(html);
+
+    expect(result).toContain('href="https://survicate.com/pricing/"');
+    expect(result).toContain('target="_blank"');
+    expect(count(result, 'a > img')).toBe(1);
+  });
+
+  it('drops an unsafe address wrapped around a pasted image', () => {
+    const html =
+      '<a href="javascript%3Aalert(1)"><img src="https://cdn.builder.io/api/v1/image/x" alt=""></a>';
+
+    expect(roundTrip(html.replace('%3A', ':'))).not.toContain('href=');
+  });
+
   it('keeps figures with their captions', () => {
     const html =
       '<figure><img src="https://cdn.builder.io/x" alt=""><figcaption>Caption</figcaption></figure>';
