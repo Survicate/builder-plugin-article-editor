@@ -112,6 +112,12 @@
   overflow-y: auto;
 }
 
+.sv-article-editor .ProseMirror::after {
+  clear: both;
+  content: '';
+  display: block;
+}
+
 .sv-article-editor .ProseMirror {
   font-family:
     'Inter',
@@ -137,12 +143,14 @@
 }
 
 .sv-article-editor .ProseMirror h2 {
+  clear: both;
   font-size: 24px;
   font-weight: 700;
   margin: 40px 0 0;
 }
 
 .sv-article-editor .ProseMirror h3 {
+  clear: both;
   font-size: 18px;
   font-weight: 700;
   margin: 24px 0 0;
@@ -761,14 +769,19 @@
   justify-content: flex-end;
 }
 
-.sv-image[data-align='left'] .sv-image__picture,
-.sv-image[data-align='right'] .sv-image__picture {
+.sv-image[data-align='left'],
+.sv-image[data-align='right'] {
   max-width: 50%;
 }
 
-.sv-image[data-align='right'] .sv-image__picture {
-  margin-left: auto;
-  display: block;
+.sv-image[data-align='left'] {
+  float: left;
+  margin-right: 24px;
+}
+
+.sv-image[data-align='right'] {
+  float: right;
+  margin-left: 24px;
 }
 
 .sv-image[data-align='center'] .sv-image__picture {
