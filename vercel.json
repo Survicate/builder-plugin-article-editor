@@ -2,7 +2,7 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "framework": null,
   "installCommand": "npm install --ignore-scripts",
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build && npm run build:harness && mkdir -p dist/harness && cp dev/index.html dev-dist/harness.js dist/harness/",
   "outputDirectory": "dist",
   "redirects": [{ "source": "/", "destination": "/plugin.system.js" }],
   "headers": [
