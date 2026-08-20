@@ -4,6 +4,7 @@
   "installCommand": "npm install --ignore-scripts",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "redirects": [{ "source": "/", "destination": "/plugin.system.js" }],
   "headers": [
     {
       "source": "/(.*)",
