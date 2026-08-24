@@ -5,7 +5,7 @@ import {
   serializeBlockData,
   textOf,
 } from '@/extensions/blockData';
-import { buildAvatarButton, buildField } from '@/extensions/blockFields';
+import { buildAvatarButton, buildField, stopsInteractiveEvents } from '@/extensions/blockFields';
 import type { UploadImage } from '@/upload/uploadImage';
 
 export const AUTHOR_QUOTE_KIND = 'author-quote';
@@ -114,6 +114,7 @@ export const AuthorQuote = Node.create<AuthorQuoteOptions>({
       return {
         dom,
         ignoreMutation: () => true,
+        stopEvent: stopsInteractiveEvents,
         update: (updated) => updated.type.name === node.type.name,
       };
     };

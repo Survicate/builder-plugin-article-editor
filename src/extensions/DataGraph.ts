@@ -5,7 +5,7 @@ import {
   serializeBlockData,
   textOf,
 } from '@/extensions/blockData';
-import { buildField, stopEditorEvents } from '@/extensions/blockFields';
+import { buildField, stopEditorEvents, stopsInteractiveEvents } from '@/extensions/blockFields';
 
 export const DATA_GRAPH_KIND = 'data-graph';
 
@@ -157,6 +157,7 @@ export const DataGraph = Node.create({
       return {
         dom,
         ignoreMutation: () => true,
+        stopEvent: stopsInteractiveEvents,
         update: (updated) => updated.type.name === node.type.name,
       };
     };

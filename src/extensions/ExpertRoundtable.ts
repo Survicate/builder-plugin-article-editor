@@ -5,7 +5,7 @@ import {
   serializeBlockData,
   textOf,
 } from '@/extensions/blockData';
-import { buildAvatarButton, buildField } from '@/extensions/blockFields';
+import { buildAvatarButton, buildField, stopsInteractiveEvents } from '@/extensions/blockFields';
 import type { UploadImage } from '@/upload/uploadImage';
 
 export const EXPERT_ROUNDTABLE_KIND = 'expert-roundtable';
@@ -164,6 +164,7 @@ export const ExpertRoundtable = Node.create<ExpertRoundtableOptions>({
       return {
         dom,
         ignoreMutation: () => true,
+        stopEvent: stopsInteractiveEvents,
         update: (updated) => updated.type.name === node.type.name,
       };
     };

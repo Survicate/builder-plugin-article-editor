@@ -175,6 +175,10 @@
   margin: 24px 0 0;
 }
 
+.sv-article-editor .ProseMirror :is(h1, h2, h3, h4, h5, h6) strong {
+  font-weight: inherit;
+}
+
 .sv-article-editor .ProseMirror a {
   color: var(--sv-accent);
   text-decoration: none;
@@ -200,6 +204,7 @@
   clear: both;
   border: 1px solid #e0d8fd;
   border-radius: 16px;
+  font-style: italic;
   margin: 24px 0 0;
   padding: 20px 24px;
 }
@@ -312,6 +317,11 @@
 .sv-embed-card__input:focus {
   border-color: var(--sv-accent);
   outline: none;
+}
+
+.sv-embed-card__error {
+  color: #b3261e;
+  font-size: 12px;
 }
 
 .sv-embed-card__edit {
@@ -856,4 +866,33 @@
   font-size: 12px;
   gap: 4px;
   white-space: nowrap;
+}
+
+.sv-image__title {
+  border: 1px solid var(--sv-line);
+  border-radius: 6px;
+  flex: 1;
+  font-size: 12px;
+  min-width: 140px;
+  padding: 5px 8px;
+}
+
+.sv-image__title:focus {
+  border-color: var(--sv-accent);
+  outline: none;
+}
+
+.sv-image__caption {
+  background: transparent;
+  border: 1px solid var(--sv-line);
+  border-radius: 6px;
+  color: var(--sv-accent);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+}
+
+.sv-image__caption:hover {
+  background: var(--sv-surface-muted);
 }

@@ -1,4 +1,6 @@
 import { mergeAttributes, Node } from '@tiptap/core';
+import { checkEmbedUrl } from '@/editor/embedUrl';
+import { stopsInteractiveEvents } from '@/extensions/blockFields';
 
 export const EMBED_LABELS: Record<string, string> = {
   arcade: 'Arcade demo',
@@ -43,12 +45,14 @@ export const ArticleEmbed = Node.create({
       const dom = document.createElement('div');
       const label = document.createElement('span');
       const input = document.createElement('input');
+      const error = document.createElement('span');
 
       dom.className = 'sv-embed-card';
       dom.dataset.embedKind = kind;
       dom.contentEditable = 'false';
       label.className = 'sv-embed-card__label';
       label.textContent = EMBED_LABELS[kind] ?? 'Embedded content';
+      error.className = 'sv-embed-card__error';
 
       input.className = 'sv-embed-card__input';
       input.placeholder = 'Paste the embed address, starting with https://';
@@ -59,12 +63,25 @@ export const ArticleEmbed = Node.create({
         const position = typeof getPos === 'function' ? getPos() : null;
         const value = input.value.trim();
 
-        if (position === null || position === undefined || !value.startsWith('https://')) return;
+        if (position === null || position === undefined || !value) return;
+
+        const verdict = checkEmbedUrl(kind, value);
+
+        if (!verdict.ok) {
+          error.textContent = verdict.message ?? '';
+          input.after(error);
+
+          return;
+        }
+
+        error.remove();
+
+        if (verdict.normalized) input.value = verdict.normalized;
 
         editor
           .chain()
           .command(({ tr }) => {
-            tr.setNodeAttribute(position, 'data-src', value);
+            tr.setNodeAttribute(position, 'data-src', verdict.normalized ?? value);
 
             return true;
           })
@@ -80,7 +97,7 @@ export const ArticleEmbed = Node.create({
       if (!source) {
         dom.replaceChildren(label, input);
 
-        return { dom };
+        return { dom, stopEvent: stopsInteractiveEvents };
       }
 
       const url = document.createElement('span');
@@ -98,7 +115,7 @@ export const ArticleEmbed = Node.create({
       });
       dom.replaceChildren(label, url, edit);
 
-      return { dom };
+      return { dom, stopEvent: stopsInteractiveEvents };
     };
   },
 

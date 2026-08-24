@@ -79,6 +79,24 @@ describe('article round-trip', () => {
     expect(roundTrip(html)).toContain('data-align="left"');
   });
 
+  it('keeps the image tooltip title', () => {
+    const html =
+      '<img src="https://cdn.builder.io/api/v1/image/x" alt="Chart" title="Quarterly results">';
+
+    expect(roundTrip(html)).toContain('title="Quarterly results"');
+  });
+
+  it('keeps a caption with a link under the image', () => {
+    const html =
+      '<figure><img src="https://cdn.builder.io/api/v1/image/x" alt="">' +
+      '<figcaption>Source: <a href="https://survicate.com/blog/">our blog</a></figcaption>' +
+      '</figure>';
+    const result = roundTrip(html);
+
+    expect(count(result, 'figure > figcaption')).toBe(1);
+    expect(count(result, 'figcaption a[href]')).toBe(1);
+  });
+
   it('keeps a linked image with its target', () => {
     const html =
       '<a href="https://survicate.com/pricing/" target="_blank">' +

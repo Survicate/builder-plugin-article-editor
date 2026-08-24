@@ -44,6 +44,7 @@ export const ArticleEditor = ({
   const errorTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const initialContentRef = useRef(externalValue ?? '');
   const lastEmittedRef = useRef(externalValue ?? '');
+  const lastSyncedRef = useRef(externalValue);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [sourceDraft, setSourceDraft] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -141,6 +142,10 @@ export const ArticleEditor = ({
     const editor = editorRef.current;
 
     if (!editor || externalValue === undefined || sourceDraft !== null) return;
+
+    if (externalValue === lastSyncedRef.current) return;
+
+    lastSyncedRef.current = externalValue;
 
     if (externalValue === lastEmittedRef.current) return;
 

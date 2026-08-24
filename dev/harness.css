@@ -29,7 +29,7 @@ body {
   grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
 }
 
-.harness-grid h2 {
+.harness-grid > section > h2 {
   font-size: 13px;
   letter-spacing: 0.08em;
   margin: 0 0 8px;

@@ -5,6 +5,11 @@ export const stopEditorEvents = (element: HTMLElement) => {
   element.addEventListener('keydown', (event) => event.stopPropagation());
 };
 
+const INTERACTIVE_CONTROLS = 'input, textarea, button, select, label';
+
+export const stopsInteractiveEvents = (event: Event): boolean =>
+  event.target instanceof Element && event.target.closest(INTERACTIVE_CONTROLS) !== null;
+
 export const buildField = (
   className: string,
   placeholder: string,

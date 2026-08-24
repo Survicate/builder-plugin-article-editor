@@ -1,5 +1,7 @@
 import { mergeAttributes, Node } from '@tiptap/core';
+import { TextSelection } from '@tiptap/pm/state';
 import { dropUnsafeHref, normalizeHref } from '@/editor/normalizeHref';
+import { stopsInteractiveEvents } from '@/extensions/blockFields';
 
 const ALIGN_CHOICES = [
   { label: '◧', title: 'Text wraps on the right', value: 'left' },
@@ -46,6 +48,7 @@ export const ArticleImage = Node.create({
       href: linkHrefAttribute(),
       src: plainAttribute('src'),
       target: linkAttribute('target'),
+      title: plainAttribute('title'),
       width: plainAttribute('width'),
     };
   },
@@ -60,6 +63,8 @@ export const ArticleImage = Node.create({
       const linkField = document.createElement('input');
       const newTabLabel = document.createElement('label');
       const newTabBox = document.createElement('input');
+      const titleField = document.createElement('input');
+      const captionButton = document.createElement('button');
 
       const setAttributes = (values: Record<string, string | null>) => {
         const position = typeof getPos === 'function' ? getPos() : null;
@@ -143,7 +148,66 @@ export const ArticleImage = Node.create({
       newTabLabel.className = 'sv-image__newtab';
       newTabLabel.append(newTabBox, document.createTextNode('New tab'));
 
-      controls.append(alignGroup, linkField, newTabLabel);
+      titleField.className = 'sv-image__title';
+      titleField.type = 'text';
+      titleField.placeholder = 'Tooltip title (optional)';
+      titleField.value = (node.attrs.title as string | null) ?? '';
+      stopEditorEvents(titleField);
+      titleField.addEventListener('change', () => {
+        setAttributes({ title: titleField.value.trim() || null });
+      });
+
+      captionButton.className = 'sv-image__caption';
+      captionButton.type = 'button';
+      captionButton.textContent = 'Caption';
+      captionButton.title = 'Add a caption below the image (links allowed)';
+      stopEditorEvents(captionButton);
+      captionButton.addEventListener('click', () => {
+        const position = typeof getPos === 'function' ? getPos() : null;
+
+        if (position === null || position === undefined) return;
+
+        editor
+          .chain()
+          .command(({ state, tr }) => {
+            const imageNode = state.doc.nodeAt(position);
+
+            if (!imageNode) return false;
+
+            const figureType = state.schema.nodes.figure;
+            const captionType = state.schema.nodes.figcaption;
+            const resolved = state.doc.resolve(position);
+
+            if (resolved.parent.type === figureType) {
+              const contentStart = resolved.start();
+              let captionPosition: number | null = null;
+
+              resolved.parent.forEach((child, offset) => {
+                if (child.type === captionType) captionPosition = contentStart + offset;
+              });
+
+              if (captionPosition === null) {
+                captionPosition = contentStart + resolved.parent.content.size;
+                tr.insert(captionPosition, captionType.create());
+              }
+
+              tr.setSelection(TextSelection.create(tr.doc, captionPosition + 1));
+
+              return true;
+            }
+
+            const figure = figureType.create(null, [imageNode, captionType.create()]);
+
+            tr.replaceWith(position, position + imageNode.nodeSize, figure);
+            tr.setSelection(TextSelection.create(tr.doc, position + imageNode.nodeSize + 2));
+
+            return true;
+          })
+          .focus()
+          .run();
+      });
+
+      controls.append(alignGroup, linkField, newTabLabel, titleField, captionButton);
       dom.append(image, altField, controls);
       reflectAlign((node.attrs.align as string | null) ?? null);
 
@@ -155,6 +219,7 @@ export const ArticleImage = Node.create({
           dom.classList.add('is-selected');
           altField.focus();
         },
+        stopEvent: stopsInteractiveEvents,
         update: (updated) => {
           if (updated.type.name !== node.type.name) return false;
 
@@ -168,6 +233,10 @@ export const ArticleImage = Node.create({
 
           if (document.activeElement !== linkField) {
             linkField.value = (updated.attrs.href as string | null) ?? '';
+          }
+
+          if (document.activeElement !== titleField) {
+            titleField.value = (updated.attrs.title as string | null) ?? '';
           }
 
           newTabBox.checked = updated.attrs.target === '_blank';

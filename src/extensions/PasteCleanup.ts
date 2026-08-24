@@ -13,8 +13,24 @@ const SPAN_TAG = /<\/?span[^>]*>/gi;
 const CLASS_ATTRIBUTE = /\sclass="[^"]*"/gi;
 const BOLD_WRAPPER = /<b\b([^>]*)>/gi;
 
+const unwrapNonBoldWrappers = (html: string): string => {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const wrappers = doc.body.querySelectorAll('b[style*="font-weight"], b[id^="docs-internal"]');
+
+  for (const wrapper of wrappers) {
+    const weight = (wrapper as HTMLElement).style.fontWeight;
+    const isDocsWrapper = wrapper.id.startsWith('docs-internal');
+
+    if (isDocsWrapper || weight === 'normal' || weight === '400') {
+      wrapper.replaceWith(...wrapper.childNodes);
+    }
+  }
+
+  return doc.body.innerHTML;
+};
+
 export const cleanPastedHtml = (html: string): string =>
-  html
+  unwrapNonBoldWrappers(html)
     .replace(WORD_CONDITIONAL, '')
     .replace(HTML_COMMENT, '')
     .replace(STYLE_BLOCK, '')

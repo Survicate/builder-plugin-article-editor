@@ -91,7 +91,7 @@ const Harness = () => {
             onChange={setEdited}
             searchLinks={searchFixtureLinks}
             uploadImage={uploadToDataUrl}
-            value={SAMPLE_ARTICLE}
+            value={value}
           />
         </section>
         <section>
