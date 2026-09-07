@@ -50,3 +50,55 @@ describe('cleanPastedHtml', () => {
     expect(cleanPastedHtml(html)).toBe(html);
   });
 });
+
+describe('cleanPastedHtml tables', () => {
+  it('promotes the first row of a headerless table to a thead', () => {
+    const html =
+      '<table><tbody><tr><td>Name</td><td>Score</td></tr><tr><td>NPS</td><td>42</td></tr></tbody></table>';
+
+    expect(cleanPastedHtml(html)).toBe(
+      '<table><thead><tr><th>Name</th><th>Score</th></tr></thead>' +
+        '<tbody><tr><td>NPS</td><td>42</td></tr></tbody></table>',
+    );
+  });
+
+  it('leaves tables that already have header cells untouched', () => {
+    const html =
+      '<table><thead><tr><th>Name</th></tr></thead><tbody><tr><td>NPS</td></tr></tbody></table>';
+
+    expect(cleanPastedHtml(html)).toBe(html);
+  });
+});
+
+describe('cleanPastedHtml survey embeds', () => {
+  const surveyIframe =
+    '<iframe src="https://respondent.survicate.com/workspaces/abc/surveys/67e48c15929cd5c0/preview.html?autofocus=false"></iframe>';
+
+  it('converts a pasted survey iframe into an embed card with the suggested CTA', () => {
+    expect(cleanPastedHtml(surveyIframe)).toBe(
+      '<div data-article-embed="survey" ' +
+        'data-src="https://respondent.survicate.com/workspaces/abc/surveys/67e48c15929cd5c0/preview.html?autofocus=false" ' +
+        'data-embed-cta-href="https://panel.survicate.com/signup?survey=67e48c15929cd5c0"></div>',
+    );
+  });
+
+  it('absorbs the Webflow CTA embed that follows the survey iframe', () => {
+    const html =
+      `<div>${surveyIframe}</div>` +
+      '<div style="display: flex; justify-content: center;">' +
+      '<a class="article-content-primary" href="https://panel.survicate.com/signup?survey=custom">Grab the template</a></div>';
+    const result = cleanPastedHtml(html);
+
+    expect(result).toContain(
+      'data-embed-cta-href="https://panel.survicate.com/signup?survey=custom"',
+    );
+    expect(result).toContain('data-embed-cta-label="Grab the template"');
+    expect(result).not.toContain('article-content-primary');
+  });
+
+  it('ignores iframes from other hosts', () => {
+    const html = '<iframe src="https://example.com/widget"></iframe>';
+
+    expect(cleanPastedHtml(html)).not.toContain('data-article-embed');
+  });
+});

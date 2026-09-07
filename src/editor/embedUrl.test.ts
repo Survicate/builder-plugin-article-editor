@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { checkEmbedUrl } from '@/editor/embedUrl';
+import { checkEmbedUrl, surveySignupUrl } from '@/editor/embedUrl';
 
 describe('checkEmbedUrl', () => {
   it('rejects addresses that are not https links', () => {
@@ -53,5 +53,19 @@ describe('checkEmbedUrl', () => {
   it('accepts any https address for kinds without a dedicated rule', () => {
     expect(checkEmbedUrl('arcade', 'https://demo.arcade.software/abc/embed').ok).toBe(true);
     expect(checkEmbedUrl('iframe', 'https://example.com/widget').ok).toBe(true);
+  });
+});
+
+describe('surveySignupUrl', () => {
+  it('derives the panel signup address from a share link', () => {
+    expect(
+      surveySignupUrl(
+        'https://respondent.survicate.com/workspaces/lktn/surveys/67e48c15929cd5c0/preview.html?autofocus=false',
+      ),
+    ).toBe('https://panel.survicate.com/signup?survey=67e48c15929cd5c0');
+  });
+
+  it('returns null when the address has no survey id', () => {
+    expect(surveySignupUrl('https://respondent.survicate.com/whatever')).toBeNull();
   });
 });

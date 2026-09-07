@@ -2,6 +2,7 @@ import type { Editor } from '@tiptap/core';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { EDITOR_CONTAINER_CLASS, ERROR_DISMISS_MS, ON_CHANGE_DEBOUNCE_MS } from '@/constants';
 import { createArticleEditor, serializeEditor } from '@/editor/createArticleEditor';
+import { collapseFormattedHtml, formatArticleHtml } from '@/editor/formatArticleHtml';
 import { normalizeIncomingHtml } from '@/editor/normalizeIncomingHtml';
 import { createToolbar } from '@/editor/toolbar';
 import {
@@ -164,7 +165,7 @@ export const ArticleEditor = ({
   const openSourceView = () => {
     const editor = editorRef.current;
 
-    if (editor) setSourceDraft(serializeEditor(editor));
+    if (editor) setSourceDraft(formatArticleHtml(serializeEditor(editor)));
   };
 
   const applySourceView = () => {
@@ -177,7 +178,7 @@ export const ArticleEditor = ({
 
     const kept = serializeEditor(editor);
 
-    if (kept !== sourceDraft.trim()) {
+    if (kept !== collapseFormattedHtml(sourceDraft)) {
       setStatus('Some of the pasted markup was adjusted to the article format');
       setTimeout(() => setStatus(null), ERROR_DISMISS_MS);
     }
