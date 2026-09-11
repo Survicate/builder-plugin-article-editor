@@ -23,6 +23,33 @@ export const nearestHeadingText = (editor: Editor): string | null => {
   return heading;
 };
 
+const collectDescendantFrames = (root: Window, frames: Set<Window>): void => {
+  for (let index = 0; index < root.length; index += 1) {
+    const frame = (root as unknown as Record<number, Window | undefined>)[index];
+
+    if (!frame || frames.has(frame)) continue;
+
+    frames.add(frame);
+    collectDescendantFrames(frame, frames);
+  }
+};
+
+export const collectReachableFrames = (): Set<Window> => {
+  const frames = new Set<Window>();
+
+  document.querySelectorAll('iframe').forEach((frame) => {
+    if (frame.contentWindow) frames.add(frame.contentWindow);
+  });
+
+  try {
+    collectDescendantFrames(window.top ?? window, frames);
+  } catch {
+    collectDescendantFrames(window, frames);
+  }
+
+  return frames;
+};
+
 export const broadcastCursorSection = (heading: string | null): void => {
   const message: CursorSectionMessage = {
     heading,
@@ -30,8 +57,12 @@ export const broadcastCursorSection = (heading: string | null): void => {
     type: CURSOR_MESSAGE_TYPE,
   };
 
-  document.querySelectorAll('iframe').forEach((frame) => {
-    frame.contentWindow?.postMessage(message, '*');
+  collectReachableFrames().forEach((frame) => {
+    try {
+      frame.postMessage(message, '*');
+    } catch {
+      // Sandboxed frames that refuse cross-origin messages are skipped.
+    }
   });
 };
 
