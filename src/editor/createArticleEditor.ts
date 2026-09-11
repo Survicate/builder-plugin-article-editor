@@ -1,6 +1,7 @@
 import { Editor, type Extensions } from '@tiptap/core';
 import { TableKit } from '@tiptap/extension-table';
 import StarterKit from '@tiptap/starter-kit';
+import { TABLE_CELL_MIN_WIDTH } from '@/constants';
 import { normalizeIncomingHtml } from '@/editor/normalizeIncomingHtml';
 import { serializeArticleHtml } from '@/editor/serializeArticleHtml';
 import { ArticleEmbed } from '@/extensions/ArticleEmbed';
@@ -51,7 +52,7 @@ export const createArticleExtensions = ({
       openOnClick: false,
     },
   }),
-  TableKit.configure({ table: { resizable: true } }),
+  TableKit.configure({ table: { cellMinWidth: TABLE_CELL_MIN_WIDTH, resizable: true } }),
   ArticleEmbed,
   ArticleImage,
   ExpertRoundtable.configure({
