@@ -11,6 +11,6 @@ export const ON_CHANGE_DEBOUNCE_MS = 300;
 
 export const CURSOR_SYNC_DEBOUNCE_MS = 200;
 
-export const TABLE_CELL_MIN_WIDTH = 120;
+export const TABLE_CELL_MIN_WIDTH = 160;
 
 export const ERROR_DISMISS_MS = 8000;
