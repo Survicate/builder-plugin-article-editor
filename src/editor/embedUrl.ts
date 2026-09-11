@@ -10,7 +10,15 @@ const YOUTUBE_ID_PATTERNS = [
   /youtube\.com\/watch\?(?:[^#]*&)?v=([\w-]{6,})/,
 ];
 
+const SURVEY_ID_PATTERN = /respondent\.survicate\.com\/(?:[^?#]*\/)?surveys\/([a-z0-9]+)/i;
+
 const rejected = (message: string): EmbedUrlVerdict => ({ message, ok: false });
+
+export const surveySignupUrl = (surveyUrl: string): string | null => {
+  const id = surveyUrl.match(SURVEY_ID_PATTERN)?.[1];
+
+  return id ? `https://panel.survicate.com/signup?survey=${id}` : null;
+};
 
 const parsedHttps = (raw: string): URL | null => {
   try {

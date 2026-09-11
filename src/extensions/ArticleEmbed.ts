@@ -1,5 +1,5 @@
 import { mergeAttributes, Node } from '@tiptap/core';
-import { checkEmbedUrl } from '@/editor/embedUrl';
+import { checkEmbedUrl, surveySignupUrl } from '@/editor/embedUrl';
 import { stopsInteractiveEvents } from '@/extensions/blockFields';
 
 export const EMBED_LABELS: Record<string, string> = {
@@ -83,10 +83,66 @@ export const ArticleEmbed = Node.create({
           .command(({ tr }) => {
             tr.setNodeAttribute(position, 'data-src', verdict.normalized ?? value);
 
+            if (kind === 'survey' && !node.attrs['data-embed-cta-href']) {
+              const suggested = surveySignupUrl(value);
+
+              if (suggested) tr.setNodeAttribute(position, 'data-embed-cta-href', suggested);
+            }
+
             return true;
           })
           .run();
       });
+
+      const setEmbedAttribute = (name: string, attributeValue: string | null) => {
+        const position = typeof getPos === 'function' ? getPos() : null;
+
+        if (position === null || position === undefined) return;
+
+        editor
+          .chain()
+          .command(({ tr }) => {
+            tr.setNodeAttribute(position, name, attributeValue);
+
+            return true;
+          })
+          .run();
+      };
+
+      const ctaInput = (type: string, placeholder: string, attribute: string) => {
+        const field = document.createElement('input');
+
+        field.className = 'sv-embed-card__input';
+        field.type = type;
+        field.placeholder = placeholder;
+        field.value = (node.attrs[attribute] as string | null) ?? '';
+        field.addEventListener('mousedown', (event) => event.stopPropagation());
+        field.addEventListener('keydown', (event) => event.stopPropagation());
+        field.addEventListener('change', () => {
+          const value = field.value.trim();
+
+          field.value = value;
+          setEmbedAttribute(attribute, value || null);
+        });
+
+        return field;
+      };
+
+      const surveyCtaRow = () => {
+        const row = document.createElement('div');
+        const hint = document.createElement('span');
+
+        row.className = 'sv-embed-card__cta';
+        hint.className = 'sv-embed-card__cta-hint';
+        hint.textContent = 'CTA under the survey:';
+        row.append(
+          hint,
+          ctaInput('url', 'https://panel.survicate.com/signup?survey=...', 'data-embed-cta-href'),
+          ctaInput('text', 'Use this template', 'data-embed-cta-label'),
+        );
+
+        return row;
+      };
 
       const showInput = () => {
         input.value = source;
@@ -102,6 +158,9 @@ export const ArticleEmbed = Node.create({
 
       const url = document.createElement('span');
       const edit = document.createElement('button');
+      const ctaRow = kind === 'survey' ? surveyCtaRow() : null;
+      const showSaved = () =>
+        dom.replaceChildren(...(ctaRow ? [label, url, edit, ctaRow] : [label, url, edit]));
 
       url.className = 'sv-embed-card__url';
       url.textContent = source;
@@ -111,9 +170,9 @@ export const ArticleEmbed = Node.create({
       edit.addEventListener('mousedown', (event) => event.stopPropagation());
       edit.addEventListener('click', showInput);
       input.addEventListener('blur', () => {
-        if (input.value.trim() === source) dom.replaceChildren(label, url, edit);
+        if (input.value.trim() === source) showSaved();
       });
-      dom.replaceChildren(label, url, edit);
+      showSaved();
 
       return { dom, stopEvent: stopsInteractiveEvents };
     };
