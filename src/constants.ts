@@ -9,4 +9,6 @@ export const EDITOR_CONTAINER_CLASS = 'sv-article-editor';
 
 export const ON_CHANGE_DEBOUNCE_MS = 300;
 
+export const CURSOR_SYNC_DEBOUNCE_MS = 200;
+
 export const ERROR_DISMISS_MS = 8000;

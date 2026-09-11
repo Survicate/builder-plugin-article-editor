@@ -1,9 +1,15 @@
 import type { Editor } from '@tiptap/core';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { EDITOR_CONTAINER_CLASS, ERROR_DISMISS_MS, ON_CHANGE_DEBOUNCE_MS } from '@/constants';
+import {
+  CURSOR_SYNC_DEBOUNCE_MS,
+  EDITOR_CONTAINER_CLASS,
+  ERROR_DISMISS_MS,
+  ON_CHANGE_DEBOUNCE_MS,
+} from '@/constants';
 import { createArticleEditor, serializeEditor } from '@/editor/createArticleEditor';
 import { collapseFormattedHtml, formatArticleHtml } from '@/editor/formatArticleHtml';
 import { normalizeIncomingHtml } from '@/editor/normalizeIncomingHtml';
+import { createCursorSectionNotifier } from '@/editor/previewScrollSync';
 import { createToolbar } from '@/editor/toolbar';
 import {
   type BuilderSearchContext,
@@ -121,7 +127,10 @@ export const ArticleEditor = ({
     editorRef.current = editor;
     toolbarHost.prepend(createToolbar(editor));
 
+    const disposeCursorSync = createCursorSectionNotifier(editor, CURSOR_SYNC_DEBOUNCE_MS);
+
     return () => {
+      disposeCursorSync();
       clearTimeout(debounceRef.current);
       clearTimeout(errorTimeoutRef.current);
 
@@ -203,22 +212,24 @@ export const ArticleEditor = ({
   return (
     <div className={containerClass}>
       <div className="sv-toolbar-host" ref={toolbarRef}>
-        <button
-          className="sv-toolbar__button sv-toolbar__button--fullscreen"
-          onClick={() => setIsFullscreen((current) => !current)}
-          title={isFullscreen ? 'Exit full screen (Esc)' : 'Full screen'}
-          type="button"
-        >
-          {isFullscreen ? '⤡' : '⤢'}
-        </button>
-        <button
-          className="sv-toolbar__button sv-toolbar__button--source"
-          onClick={() => (sourceDraft === null ? openSourceView() : setSourceDraft(null))}
-          title={sourceDraft === null ? 'Edit the HTML source' : 'Back to the editor'}
-          type="button"
-        >
-          {'</>'}
-        </button>
+        <div className="sv-toolbar-host__utils">
+          <button
+            className="sv-toolbar__button sv-toolbar__button--source"
+            onClick={() => (sourceDraft === null ? openSourceView() : setSourceDraft(null))}
+            title={sourceDraft === null ? 'Edit the HTML source' : 'Back to the editor'}
+            type="button"
+          >
+            {'</>'}
+          </button>
+          <button
+            className="sv-toolbar__button sv-toolbar__button--fullscreen"
+            onClick={() => setIsFullscreen((current) => !current)}
+            title={isFullscreen ? 'Exit full screen (Esc)' : 'Full screen'}
+            type="button"
+          >
+            {isFullscreen ? '⤡' : '⤢'}
+          </button>
+        </div>
       </div>
       {error === null ? null : (
         <p className="sv-editor-notice sv-editor-notice--error" role="alert">
