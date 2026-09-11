@@ -244,6 +244,24 @@
   overflow-x: auto;
 }
 
+.sv-article-editor .ProseMirror .tableWrapper::-webkit-scrollbar {
+  height: 10px;
+}
+
+.sv-article-editor .ProseMirror .tableWrapper::-webkit-scrollbar-track {
+  background: var(--sv-surface-muted);
+  border-radius: 5px;
+}
+
+.sv-article-editor .ProseMirror .tableWrapper::-webkit-scrollbar-thumb {
+  background: var(--sv-line);
+  border-radius: 5px;
+}
+
+.sv-article-editor .ProseMirror .tableWrapper::-webkit-scrollbar-thumb:hover {
+  background: #b7b2c4;
+}
+
 .sv-article-editor .ProseMirror table {
   border: 1px solid #e5e2ee;
   clear: both;

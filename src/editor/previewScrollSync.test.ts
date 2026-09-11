@@ -1,3 +1,4 @@
+import type { Editor } from '@tiptap/core';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { createArticleEditor } from '@/editor/createArticleEditor';
 import {
@@ -5,6 +6,7 @@ import {
   createCursorSectionNotifier,
   CURSOR_MESSAGE_SOURCE,
   CURSOR_MESSAGE_TYPE,
+  cursorBlockLocator,
   nearestHeadingText,
 } from '@/editor/previewScrollSync';
 
@@ -19,6 +21,22 @@ const mountEditor = (content: string) => {
     onContentError: vi.fn(),
     onUpdate: vi.fn(),
   });
+};
+
+const selectText = (editor: Editor, needle: string) => {
+  let at: number | null = null;
+
+  editor.state.doc.descendants((node, pos) => {
+    if (at !== null) return false;
+
+    if (node.isText && node.text?.includes(needle)) at = pos + node.text.indexOf(needle) + 1;
+
+    return true;
+  });
+
+  if (at === null) throw new Error(`text not found: ${needle}`);
+
+  editor.commands.setTextSelection(at);
 };
 
 describe('nearestHeadingText', () => {
@@ -56,6 +74,52 @@ describe('nearestHeadingText', () => {
   });
 });
 
+describe('cursorBlockLocator', () => {
+  beforeEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('locates the paragraph under the cursor', () => {
+    const editor = mountEditor('<p>Intro</p><h2>First</h2><p>Body one</p>');
+
+    selectText(editor, 'Body one');
+
+    expect(cursorBlockLocator(editor)).toEqual({ occurrence: 0, text: 'Bodyone' });
+    editor.destroy();
+  });
+
+  it('counts repeated signatures before the cursor block', () => {
+    const editor = mountEditor('<p>Same</p><p>Other</p><p>Same</p>');
+
+    editor.commands.focus('end');
+
+    expect(cursorBlockLocator(editor)).toEqual({ occurrence: 1, text: 'Same' });
+    editor.destroy();
+  });
+
+  it('falls back to the previous text block for a text-free selection', () => {
+    const editor = mountEditor('<p>Intro</p><hr><p>After</p>');
+
+    editor.commands.setNodeSelection(7);
+
+    expect(cursorBlockLocator(editor)).toEqual({ occurrence: 0, text: 'Intro' });
+    editor.destroy();
+  });
+
+  it('locates the list item inside a list block', () => {
+    const editor = mountEditor('<ul><li><p>Alpha</p></li><li><p>Beta</p></li></ul>');
+
+    selectText(editor, 'Beta');
+
+    expect(cursorBlockLocator(editor)).toEqual({
+      listItem: { occurrence: 0, text: 'Beta' },
+      occurrence: 0,
+      text: 'AlphaBeta',
+    });
+    editor.destroy();
+  });
+});
+
 describe('broadcastCursorSection', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
@@ -69,10 +133,15 @@ describe('broadcastCursorSection', () => {
     const postMessage = vi.fn();
 
     Object.defineProperty(frame, 'contentWindow', { value: { postMessage } });
-    broadcastCursorSection('First');
+    broadcastCursorSection({ block: { occurrence: 0, text: 'First' }, heading: 'First' });
 
     expect(postMessage).toHaveBeenCalledWith(
-      { heading: 'First', source: CURSOR_MESSAGE_SOURCE, type: CURSOR_MESSAGE_TYPE },
+      {
+        block: { occurrence: 0, text: 'First' },
+        heading: 'First',
+        source: CURSOR_MESSAGE_SOURCE,
+        type: CURSOR_MESSAGE_TYPE,
+      },
       '*',
     );
   });
@@ -84,7 +153,7 @@ describe('createCursorSectionNotifier', () => {
     vi.useRealTimers();
   });
 
-  it('broadcasts once per section change after the debounce', async () => {
+  it('broadcasts once per block change after the debounce', async () => {
     vi.useFakeTimers();
 
     const editor = mountEditor('<p>Intro</p><h2>First</h2><p>Body</p>');
@@ -103,6 +172,7 @@ describe('createCursorSectionNotifier', () => {
 
     expect(postMessage).toHaveBeenCalledTimes(1);
     expect(postMessage.mock.calls[0][0].heading).toBe('First');
+    expect(postMessage.mock.calls[0][0].block).toEqual({ occurrence: 0, text: 'Body' });
 
     editor.commands.setTextSelection(editor.state.doc.content.size - 3);
     vi.advanceTimersByTime(60);

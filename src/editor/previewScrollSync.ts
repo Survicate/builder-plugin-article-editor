@@ -3,11 +3,28 @@ import type { Editor } from '@tiptap/core';
 export const CURSOR_MESSAGE_SOURCE = 'survicate-article-editor';
 export const CURSOR_MESSAGE_TYPE = 'cursor-section';
 
+const SIGNATURE_MAX_CHARS = 120;
+
+export interface CursorItemLocator {
+  occurrence: number;
+  text: string;
+}
+
+export interface CursorBlockLocator extends CursorItemLocator {
+  listItem?: CursorItemLocator;
+}
+
 export interface CursorSectionMessage {
+  block: CursorBlockLocator | null;
   heading: string | null;
   source: typeof CURSOR_MESSAGE_SOURCE;
   type: typeof CURSOR_MESSAGE_TYPE;
 }
+
+type ResolvedFrom = Editor['state']['selection']['$from'];
+
+const signatureOf = (text: string): string =>
+  text.replace(/\s+/g, '').slice(0, SIGNATURE_MAX_CHARS);
 
 export const nearestHeadingText = (editor: Editor): string | null => {
   const { doc, selection } = editor.state;
@@ -21,6 +38,71 @@ export const nearestHeadingText = (editor: Editor): string | null => {
   });
 
   return heading;
+};
+
+const listItemLocator = ($from: ResolvedFrom): CursorItemLocator | null => {
+  if ($from.depth < 2) return null;
+
+  const item = $from.node(2);
+
+  if (item.type.name !== 'listItem') return null;
+
+  const text = signatureOf(item.textContent);
+
+  if (!text) return null;
+
+  const list = $from.node(1);
+  const itemPos = $from.before(2) - $from.start(1);
+  let occurrence = 0;
+  let matched = false;
+
+  list.descendants((node, pos) => {
+    if (matched || pos > itemPos) return false;
+
+    if (node.type.name !== 'listItem') return true;
+
+    if (pos === itemPos) {
+      matched = true;
+
+      return false;
+    }
+
+    if (signatureOf(node.textContent) === text) occurrence += 1;
+
+    return true;
+  });
+
+  return matched ? { occurrence, text } : null;
+};
+
+export const cursorBlockLocator = (editor: Editor): CursorBlockLocator | null => {
+  const { doc, selection } = editor.state;
+
+  if (!doc.childCount) return null;
+
+  const cursorIndex = Math.min(selection.$from.index(0), doc.childCount - 1);
+  let blockIndex = cursorIndex;
+  let text = '';
+
+  while (blockIndex >= 0) {
+    text = signatureOf(doc.child(blockIndex).textContent);
+
+    if (text) break;
+
+    blockIndex -= 1;
+  }
+
+  if (!text) return null;
+
+  let occurrence = 0;
+
+  for (let index = 0; index < blockIndex; index += 1) {
+    if (signatureOf(doc.child(index).textContent) === text) occurrence += 1;
+  }
+
+  const listItem = blockIndex === cursorIndex ? listItemLocator(selection.$from) : null;
+
+  return listItem ? { listItem, occurrence, text } : { occurrence, text };
 };
 
 const collectDescendantFrames = (root: Window, frames: Set<Window>): void => {
@@ -50,9 +132,11 @@ export const collectReachableFrames = (): Set<Window> => {
   return frames;
 };
 
-export const broadcastCursorSection = (heading: string | null): void => {
+export const broadcastCursorSection = (
+  section: Pick<CursorSectionMessage, 'block' | 'heading'>,
+): void => {
   const message: CursorSectionMessage = {
-    heading,
+    ...section,
     source: CURSOR_MESSAGE_SOURCE,
     type: CURSOR_MESSAGE_TYPE,
   };
@@ -68,17 +152,21 @@ export const broadcastCursorSection = (heading: string | null): void => {
 
 export const createCursorSectionNotifier = (editor: Editor, debounceMs: number): (() => void) => {
   let timer: ReturnType<typeof setTimeout> | undefined;
-  let lastHeading: string | null | undefined;
+  let lastKey: string | undefined;
 
   const notify = () => {
     clearTimeout(timer);
     timer = setTimeout(() => {
-      const heading = nearestHeadingText(editor);
+      const section = {
+        block: cursorBlockLocator(editor),
+        heading: nearestHeadingText(editor),
+      };
+      const key = JSON.stringify(section);
 
-      if (heading === lastHeading) return;
+      if (key === lastKey) return;
 
-      lastHeading = heading;
-      broadcastCursorSection(heading);
+      lastKey = key;
+      broadcastCursorSection(section);
     }, debounceMs);
   };
 
