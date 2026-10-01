@@ -1,3 +1,4 @@
+import { PLUGIN_NAME } from '@/constants';
 import { type BuilderUploadContext, spaceApiKey } from '@/upload/uploadImage';
 
 const ADMIN_API_URL = 'https://builder.io/api/v2/admin';
@@ -29,6 +30,12 @@ export interface AssetLibrary {
   remove: (id: string) => Promise<void>;
 }
 
+export interface BuilderAdminContext extends BuilderUploadContext {
+  globalState?: {
+    getPluginPrivateKey?: (pluginId: string) => Promise<string | null | undefined>;
+  };
+}
+
 interface AdminData {
   assets?: (Partial<BuilderAsset> | null)[] | null;
   deleteAsset?: unknown;
@@ -41,17 +48,41 @@ interface AdminResponse {
 
 const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-const callAdmin = async (
-  context: BuilderUploadContext,
-  query: string,
-  variables: Record<string, unknown>,
-): Promise<AdminData | undefined> => {
-  const authHeaders = context.user?.authHeaders;
+/**
+ * The Admin API only accepts private keys, not the signed-in user's session
+ * headers. Builder issues every installed plugin its own private key for the
+ * space, which is the documented way for a plugin to reach privileged APIs.
+ */
+const pluginKeyHeaders = async (
+  context: BuilderAdminContext,
+): Promise<Record<string, string> | null> => {
+  try {
+    const privateKey = await context.globalState?.getPluginPrivateKey?.(PLUGIN_NAME);
 
-  if (!authHeaders || !Object.keys(authHeaders).length) {
+    return privateKey ? { Authorization: `Bearer ${privateKey}` } : null;
+  } catch {
+    return null;
+  }
+};
+
+const authorizationHeaders = async (
+  context: BuilderAdminContext,
+): Promise<Record<string, string>> => {
+  const headers = (await pluginKeyHeaders(context)) ?? context.user?.authHeaders;
+
+  if (!headers || !Object.keys(headers).length) {
     throw new Error('The Builder session is still loading, try again in a moment');
   }
 
+  return headers;
+};
+
+const callAdmin = async (
+  context: BuilderAdminContext,
+  query: string,
+  variables: Record<string, unknown>,
+): Promise<AdminData | undefined> => {
+  const authHeaders = await authorizationHeaders(context);
   const apiKey = spaceApiKey(context);
   const keyParam = apiKey ? `?apiKey=${encodeURIComponent(apiKey)}` : '';
   const response = await fetch(`${ADMIN_API_URL}${keyParam}`, {
@@ -74,12 +105,12 @@ const callAdmin = async (
 
 /**
  * Lists and deletes the space's image assets through the Admin API, with the
- * signed-in user's own credentials, like the uploader does. The credentials
- * are read again on every call because Builder refreshes them mid-session.
- * The Admin API also reports each asset's pixel size, which Builder's own
- * media manager does not show, so the browser can display it.
+ * plugin's own private key (or the user session headers as a fallback). The
+ * credentials are read again on every call because Builder refreshes them
+ * mid-session. The Admin API also reports each asset's pixel size, which
+ * Builder's own media manager does not show, so the browser can display it.
  */
-export const createAssetLibrary = (context?: BuilderUploadContext): AssetLibrary | null => {
+export const createAssetLibrary = (context?: BuilderAdminContext): AssetLibrary | null => {
   if (!context) return null;
 
   return {

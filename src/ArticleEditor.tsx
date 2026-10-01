@@ -1,6 +1,10 @@
 import type { Editor } from '@tiptap/core';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { type AssetLibrary, createAssetLibrary } from '@/assets/assetLibrary';
+import {
+  type AssetLibrary,
+  type BuilderAdminContext,
+  createAssetLibrary,
+} from '@/assets/assetLibrary';
 import {
   CURSOR_SYNC_DEBOUNCE_MS,
   EDITOR_CONTAINER_CLASS,
@@ -18,17 +22,13 @@ import {
   type SearchSiteLinks,
 } from '@/search/searchSiteLinks';
 import { prepareImageForUpload } from '@/upload/prepareImageForUpload';
-import {
-  type BuilderUploadContext,
-  createImageUploader,
-  type UploadImage,
-} from '@/upload/uploadImage';
+import { createImageUploader, type UploadImage } from '@/upload/uploadImage';
 import '@/editor/editor-styles.css';
 
 export interface ArticleEditorProps {
   /** Overrides the Builder asset browsing, so the local harness can exercise it offline. */
   assetLibrary?: AssetLibrary | null;
-  context?: BuilderUploadContext & BuilderSearchContext;
+  context?: BuilderAdminContext & BuilderSearchContext;
   onChange: (value: string) => void;
   /** Overrides the Builder link search, so the local harness can exercise it offline. */
   searchLinks?: SearchSiteLinks | null;

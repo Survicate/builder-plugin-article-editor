@@ -1,3 +1,5 @@
+export const PLUGIN_NAME = '@survicate/builder-plugin-article-editor';
+
 export const EDITOR_TYPE_NAME = 'survicateArticle';
 
 export const META_TEXT_TYPE_NAME = 'survicateMetaText';
