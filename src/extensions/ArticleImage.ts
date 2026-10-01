@@ -65,6 +65,7 @@ export const ArticleImage = Node.create({
       const newTabBox = document.createElement('input');
       const titleField = document.createElement('input');
       const captionButton = document.createElement('button');
+      const replaceButton = document.createElement('button');
 
       const setAttributes = (values: Record<string, string | null>) => {
         const position = typeof getPos === 'function' ? getPos() : null;
@@ -207,7 +208,20 @@ export const ArticleImage = Node.create({
           .run();
       });
 
-      controls.append(alignGroup, linkField, newTabLabel, titleField, captionButton);
+      replaceButton.className = 'sv-image__replace';
+      replaceButton.type = 'button';
+      replaceButton.textContent = 'Replace';
+      replaceButton.title = 'Swap this picture for another one from the library';
+      stopEditorEvents(replaceButton);
+      replaceButton.addEventListener('click', () => {
+        const position = typeof getPos === 'function' ? getPos() : null;
+
+        if (position === null || position === undefined) return;
+
+        editor.storage.mediaLibrary.browseAndReplace(position);
+      });
+
+      controls.append(alignGroup, linkField, newTabLabel, titleField, captionButton, replaceButton);
       dom.append(image, altField, controls);
       reflectAlign((node.attrs.align as string | null) ?? null);
 
