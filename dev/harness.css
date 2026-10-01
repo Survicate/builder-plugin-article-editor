@@ -24,9 +24,24 @@ body {
 }
 
 .harness-grid {
-  display: grid;
+  display: flex;
   gap: 24px;
-  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+}
+
+.harness-grid > section:first-child {
+  flex: 3;
+  min-width: 0;
+}
+
+.harness-grid > section:last-child {
+  flex: 2;
+  min-width: 0;
+}
+
+.harness-preview-frame {
+  border: 0;
+  height: 0;
+  width: 0;
 }
 
 .harness-grid > section > h2 {

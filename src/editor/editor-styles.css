@@ -21,6 +21,26 @@
   flex-direction: column;
   max-height: 70vh;
   overflow: hidden;
+  position: relative;
+}
+
+.sv-column-handle {
+  bottom: 0;
+  cursor: col-resize;
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 6px;
+  z-index: 5;
+}
+
+.sv-column-handle:hover {
+  background: var(--sv-accent);
+  opacity: 0.3;
+}
+
+.sv-article-editor--fullscreen .sv-column-handle {
+  display: none;
 }
 
 .sv-article-editor--fullscreen {
