@@ -171,6 +171,16 @@ export const ARTICLE_TEMPLATES: ArticleTemplate[] = [
     label: 'Arcade demo',
     run: (editor, range) => insertEmbed(editor, 'arcade', '600', range),
   },
+  {
+    group: 'Embeds',
+    hint: 'Raw markup, e.g. an iframe',
+    keywords: ['html', 'iframe', 'code', 'embed', 'custom'],
+    label: 'HTML embed',
+    run: (editor, range) =>
+      chain(editor, range)
+        .insertContent({ attrs: { html: '' }, type: 'htmlEmbed' })
+        .run(),
+  },
 ];
 
 export const matchTemplates = (query: string): ArticleTemplate[] => {
