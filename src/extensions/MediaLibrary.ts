@@ -32,17 +32,19 @@ export const MediaLibrary = Extension.create<MediaLibraryOptions, MediaLibrarySt
 
   addProseMirrorPlugins() {
     const open = (title: string, onPick: (image: PickedImage) => void) => {
-      const { library, upload } = this.options;
+      const { library, onError, upload } = this.options;
 
       if (!library) {
-        this.options.onError(
-          'Browsing the image library needs the Builder editor, which supplies the login',
-        );
+        onError('Browsing the image library needs the Builder editor, which supplies the login');
 
         return;
       }
 
-      openMediaLibrary({ library, onPick, title, upload });
+      Promise.resolve(library.prime?.())
+        .then(() => openMediaLibrary({ library, onPick, title, upload }))
+        .catch((error: unknown) =>
+          onError(error instanceof Error ? error.message : 'The image library is unavailable'),
+        );
     };
 
     this.storage.canBrowse = Boolean(this.options.library);
