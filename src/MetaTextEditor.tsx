@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import '@/editor/editor-styles.css';
+
+const MIN_ROWS = 1;
 
 export interface MetaTextEditorProps {
   field?: {
@@ -14,6 +16,7 @@ export interface MetaTextEditorProps {
 
 export const MetaTextEditor = ({ field, onChange, value }: MetaTextEditorProps) => {
   const text = value ?? '';
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const min = field?.options?.recommendedMin;
   const max = field?.options?.recommendedMax;
   const hasRange = min !== undefined && max !== undefined;
@@ -25,17 +28,27 @@ export const MetaTextEditor = ({ field, onChange, value }: MetaTextEditorProps) 
         ? ' sv-meta-text__count--ok'
         : ' sv-meta-text__count--warn';
 
+  useEffect(() => {
+    const input = inputRef.current;
+
+    if (!input) return;
+
+    input.style.height = 'auto';
+    input.style.height = `${input.scrollHeight}px`;
+  }, [text]);
+
   return (
     <div className="sv-meta-text">
       <textarea
         className="sv-meta-text__input"
         onChange={(event) => onChange(event.target.value)}
-        rows={3}
+        ref={inputRef}
+        rows={MIN_ROWS}
         value={text}
       />
       <span className={`sv-meta-text__count${tone}`}>
         {hasRange
-          ? `${text.length} characters (aim for ${min}–${max})`
+          ? `${text.length} characters (aim for ${min}-${max})`
           : `${text.length} characters`}
       </span>
     </div>

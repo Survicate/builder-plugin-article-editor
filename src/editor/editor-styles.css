@@ -784,6 +784,7 @@
   font-family: inherit;
   font-size: 13px;
   line-height: 1.5;
+  overflow: hidden;
   padding: 8px 10px;
   resize: vertical;
   width: 100%;
