@@ -50,6 +50,28 @@ describe('createAssetLibrary', () => {
     expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe('Bearer plugin-private-key');
   });
 
+  it('asks Builder for the plugin key once and reuses it', async () => {
+    const fetchMock = respondWith({ data: { assets: [] } });
+    const getPluginPrivateKey = vi.fn().mockResolvedValue('plugin-private-key');
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const library = createAssetLibrary({ ...context, globalState: { getPluginPrivateKey } });
+
+    await library?.prime?.();
+    await library?.list({ limit: 24, offset: 0 });
+    await library?.remove('asset-1');
+
+    expect(getPluginPrivateKey).toHaveBeenCalledTimes(1);
+    expect(fetchMock.mock.calls[1][1].headers.Authorization).toBe('Bearer plugin-private-key');
+  });
+
+  it('fails priming while the Builder session is still loading', async () => {
+    const library = createAssetLibrary({});
+
+    await expect(library?.prime?.()).rejects.toThrow('still loading');
+  });
+
   it('falls back to the session headers when no plugin key is issued', async () => {
     const fetchMock = respondWith({ data: { assets: [] } });
 

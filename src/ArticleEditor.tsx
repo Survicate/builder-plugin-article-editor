@@ -78,6 +78,7 @@ export const ArticleEditor = ({
   const assetLibraryRef = useRef(assetLibrary);
   const stableLibraryRef = useRef<AssetLibrary>({
     list: (options) => assetLibraryRef.current?.list(options) ?? Promise.resolve([]),
+    prime: () => assetLibraryRef.current?.prime?.() ?? Promise.resolve(),
     remove: (id) => assetLibraryRef.current?.remove(id) ?? Promise.resolve(),
   });
   const stableSearchRef = useRef<SearchSiteLinks>((query) => {

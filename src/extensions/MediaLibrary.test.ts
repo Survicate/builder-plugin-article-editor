@@ -76,6 +76,23 @@ describe('MediaLibrary extension', () => {
     editor.destroy();
   });
 
+  it('reports a refused key instead of opening an unusable browser', async () => {
+    const onError = vi.fn();
+    const library: AssetLibrary = {
+      list: vi.fn(),
+      prime: vi.fn().mockRejectedValue(new Error('No key approved')),
+      remove: vi.fn(),
+    };
+    const editor = buildEditor('<p>Hello</p>', library, onError);
+
+    editor.storage.mediaLibrary.browseAndInsert();
+    await flush();
+
+    expect(onError).toHaveBeenCalledWith('No key approved');
+    expect(document.querySelector('.sv-media')).toBeNull();
+    editor.destroy();
+  });
+
   it('explains that browsing needs the Builder session when there is none', () => {
     const onError = vi.fn();
     const editor = buildEditor('<p>Hello</p>', null, onError);

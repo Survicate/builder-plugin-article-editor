@@ -27,6 +27,7 @@ export interface ListAssetsOptions {
 
 export interface AssetLibrary {
   list: (options: ListAssetsOptions) => Promise<BuilderAsset[]>;
+  prime?: () => Promise<void>;
   remove: (id: string) => Promise<void>;
 }
 
@@ -50,25 +51,35 @@ const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\
 
 /**
  * The Admin API only accepts private keys, not the signed-in user's session
- * headers. Builder issues every installed plugin its own private key for the
- * space, which is the documented way for a plugin to reach privileged APIs.
+ * headers. Builder keeps one private key per plugin in the space (asking the
+ * user to approve its creation on first use), so the key is fetched once and
+ * cached: unlike the session headers it does not rotate mid-session.
  */
-const pluginKeyHeaders = async (
-  context: BuilderAdminContext,
-): Promise<Record<string, string> | null> => {
-  try {
-    const privateKey = await context.globalState?.getPluginPrivateKey?.(PLUGIN_NAME);
+const createPluginKeyReader = (context: BuilderAdminContext) => {
+  let cachedHeaders: Record<string, string> | null = null;
 
-    return privateKey ? { Authorization: `Bearer ${privateKey}` } : null;
-  } catch {
-    return null;
-  }
+  return async (): Promise<Record<string, string> | null> => {
+    if (cachedHeaders) return cachedHeaders;
+
+    try {
+      const privateKey = await context.globalState?.getPluginPrivateKey?.(PLUGIN_NAME);
+
+      cachedHeaders = privateKey ? { Authorization: `Bearer ${privateKey}` } : null;
+    } catch {
+      cachedHeaders = null;
+    }
+
+    return cachedHeaders;
+  };
 };
+
+type PluginKeyReader = ReturnType<typeof createPluginKeyReader>;
 
 const authorizationHeaders = async (
   context: BuilderAdminContext,
+  readPluginKey: PluginKeyReader,
 ): Promise<Record<string, string>> => {
-  const headers = (await pluginKeyHeaders(context)) ?? context.user?.authHeaders;
+  const headers = (await readPluginKey()) ?? context.user?.authHeaders;
 
   if (!headers || !Object.keys(headers).length) {
     throw new Error('The Builder session is still loading, try again in a moment');
@@ -79,10 +90,11 @@ const authorizationHeaders = async (
 
 const callAdmin = async (
   context: BuilderAdminContext,
+  readPluginKey: PluginKeyReader,
   query: string,
   variables: Record<string, unknown>,
 ): Promise<AdminData | undefined> => {
-  const authHeaders = await authorizationHeaders(context);
+  const authHeaders = await authorizationHeaders(context, readPluginKey);
   const apiKey = spaceApiKey(context);
   const keyParam = apiKey ? `?apiKey=${encodeURIComponent(apiKey)}` : '';
   const response = await fetch(`${ADMIN_API_URL}${keyParam}`, {
@@ -106,12 +118,15 @@ const callAdmin = async (
 /**
  * Lists and deletes the space's image assets through the Admin API, with the
  * plugin's own private key (or the user session headers as a fallback). The
- * credentials are read again on every call because Builder refreshes them
- * mid-session. The Admin API also reports each asset's pixel size, which
- * Builder's own media manager does not show, so the browser can display it.
+ * Admin API also reports each asset's pixel size, which Builder's own media
+ * manager does not show, so the browser can display it. Priming resolves the
+ * credentials before the dialog mounts, so Builder's own approval prompt for
+ * a first-time key is never hidden behind the dialog's overlay.
  */
 export const createAssetLibrary = (context?: BuilderAdminContext): AssetLibrary | null => {
   if (!context) return null;
+
+  const readPluginKey = createPluginKeyReader(context);
 
   return {
     list: async ({ limit, offset, search }) => {
@@ -125,14 +140,17 @@ export const createAssetLibrary = (context?: BuilderAdminContext): AssetLibrary 
         },
         sort: { createdDate: -1 },
       };
-      const data = await callAdmin(context, ASSETS_QUERY, { input });
+      const data = await callAdmin(context, readPluginKey, ASSETS_QUERY, { input });
 
       return (data?.assets ?? []).filter((asset): asset is BuilderAsset =>
         Boolean(asset?.id && asset.url && asset.name),
       );
     },
+    prime: async () => {
+      await authorizationHeaders(context, readPluginKey);
+    },
     remove: async (id) => {
-      await callAdmin(context, DELETE_ASSET_MUTATION, { id });
+      await callAdmin(context, readPluginKey, DELETE_ASSET_MUTATION, { id });
     },
   };
 };
