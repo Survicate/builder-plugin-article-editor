@@ -1,5 +1,6 @@
 import type { Editor } from '@tiptap/core';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { type AssetLibrary, createAssetLibrary } from '@/assets/assetLibrary';
 import {
   CURSOR_SYNC_DEBOUNCE_MS,
   EDITOR_CONTAINER_CLASS,
@@ -25,6 +26,8 @@ import {
 import '@/editor/editor-styles.css';
 
 export interface ArticleEditorProps {
+  /** Overrides the Builder asset browsing, so the local harness can exercise it offline. */
+  assetLibrary?: AssetLibrary | null;
   context?: BuilderUploadContext & BuilderSearchContext;
   onChange: (value: string) => void;
   /** Overrides the Builder link search, so the local harness can exercise it offline. */
@@ -35,6 +38,7 @@ export interface ArticleEditorProps {
 }
 
 export const ArticleEditor = ({
+  assetLibrary: assetLibraryOverride,
   context,
   onChange,
   searchLinks: searchLinksOverride,
@@ -67,6 +71,15 @@ export const ArticleEditor = ({
     [context, searchLinksOverride],
   );
   const searchLinksRef = useRef(searchLinks);
+  const assetLibrary = useMemo(
+    () => assetLibraryOverride ?? createAssetLibrary(context),
+    [assetLibraryOverride, context],
+  );
+  const assetLibraryRef = useRef(assetLibrary);
+  const stableLibraryRef = useRef<AssetLibrary>({
+    list: (options) => assetLibraryRef.current?.list(options) ?? Promise.resolve([]),
+    remove: (id) => assetLibraryRef.current?.remove(id) ?? Promise.resolve(),
+  });
   const stableSearchRef = useRef<SearchSiteLinks>((query) => {
     const search = searchLinksRef.current;
 
@@ -95,12 +108,17 @@ export const ArticleEditor = ({
   }, [searchLinks]);
 
   useEffect(() => {
+    assetLibraryRef.current = assetLibrary;
+  }, [assetLibrary]);
+
+  useEffect(() => {
     const host = hostRef.current;
     const toolbarHost = toolbarRef.current;
 
     if (!host || !toolbarHost) return;
 
     const editor = createArticleEditor({
+      assetLibrary: assetLibraryRef.current ? stableLibraryRef.current : null,
       content: initialContentRef.current,
       element: host,
       onContentError: (contentError) =>

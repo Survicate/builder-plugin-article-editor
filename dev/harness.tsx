@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { render } from 'react-dom';
 import { ArticleEditor } from '@/ArticleEditor';
+import type { AssetLibrary, BuilderAsset } from '@/assets/assetLibrary';
 import { createArticleEditor, serializeEditor } from '@/editor/createArticleEditor';
 import { SAMPLE_ARTICLE } from './fixtures/sample-article';
 import './harness.css';
@@ -70,6 +71,38 @@ const searchFixtureLinks = (query: string) =>
     SITE_LINKS.filter((link) => link.title.toLowerCase().includes(query.trim().toLowerCase())),
   );
 
+const fixtureThumbnail = (hue: number) =>
+  `data:image/svg+xml,${encodeURIComponent(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="240" height="180">` +
+      `<rect width="240" height="180" fill="hsl(${hue} 70% 80%)"/></svg>`,
+  )}`;
+
+/** Stands in for the Builder asset library behind the media browser. */
+const FIXTURE_ASSETS: BuilderAsset[] = Array.from({ length: 30 }, (_, index) => ({
+  bytes: 20480 + index * 1024,
+  height: 800 + index,
+  id: `fixture-${index}`,
+  name: `fixture-photo-${index}.webp`,
+  url: fixtureThumbnail((index * 47) % 360),
+  width: 1200 + index,
+}));
+
+const fixtureAssetLibrary: AssetLibrary = {
+  list: ({ limit, offset, search }) => {
+    const term = (search ?? '').trim().toLowerCase();
+    const matches = FIXTURE_ASSETS.filter((entry) => entry.name.toLowerCase().includes(term));
+
+    return Promise.resolve(matches.slice(offset, offset + limit));
+  },
+  remove: (id) => {
+    const index = FIXTURE_ASSETS.findIndex((entry) => entry.id === id);
+
+    if (index >= 0) FIXTURE_ASSETS.splice(index, 1);
+
+    return Promise.resolve();
+  },
+};
+
 const Harness = () => {
   const [edited, setEdited] = useState<string | null>(null);
   const serialized = useMemo(() => serializeThroughSchema(SAMPLE_ARTICLE), []);
@@ -88,6 +121,7 @@ const Harness = () => {
         <section>
           <h2>Editor</h2>
           <ArticleEditor
+            assetLibrary={fixtureAssetLibrary}
             onChange={setEdited}
             searchLinks={searchFixtureLinks}
             uploadImage={uploadToDataUrl}

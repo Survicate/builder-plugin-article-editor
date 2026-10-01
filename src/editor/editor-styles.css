@@ -1,6 +1,7 @@
 /* The floating panels are appended to the body, so they need the palette too. */
 .sv-article-editor,
 .sv-link-dialog,
+.sv-media,
 .sv-slash-menu {
   --sv-ink: #15121f;
   --sv-muted: #6b6480;
@@ -952,5 +953,206 @@
 }
 
 .sv-image__caption:hover {
+  background: var(--sv-surface-muted);
+}
+
+.sv-image__replace {
+  background: transparent;
+  border: 1px solid var(--sv-line);
+  border-radius: 6px;
+  color: var(--sv-accent);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 10px;
+}
+
+.sv-image__replace:hover {
+  background: var(--sv-surface-muted);
+}
+
+.sv-media {
+  align-items: center;
+  background: rgba(21, 18, 31, 0.45);
+  display: flex;
+  inset: 0;
+  justify-content: center;
+  position: fixed;
+  z-index: 2147483002;
+}
+
+.sv-media__dialog {
+  background: var(--sv-surface);
+  border: 1px solid #e2dff0;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(21, 18, 31, 0.24);
+  display: flex;
+  flex-direction: column;
+  font-family:
+    'Inter',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    sans-serif;
+  gap: 10px;
+  max-height: min(640px, 90vh);
+  padding: 14px;
+  width: min(720px, 94vw);
+}
+
+.sv-media__header {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.sv-media__title {
+  color: var(--sv-ink);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.sv-media__close {
+  background: transparent;
+  border: 0;
+  color: var(--sv-muted);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 2px 6px;
+}
+
+.sv-media__close:hover {
+  color: var(--sv-ink);
+}
+
+.sv-media__tools {
+  display: flex;
+  gap: 8px;
+}
+
+.sv-media__search {
+  border: 1px solid #ddd4fc;
+  border-radius: 8px;
+  flex: 1;
+  font-size: 13px;
+  padding: 8px 10px;
+}
+
+.sv-media__search:focus {
+  border-color: var(--sv-accent);
+  outline: none;
+}
+
+.sv-media__upload {
+  background: var(--sv-accent);
+  border: 0;
+  border-radius: 8px;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 0 14px;
+}
+
+.sv-media__notice {
+  color: var(--sv-muted);
+  font-size: 12px;
+  margin: 0;
+}
+
+.sv-media__notice--error {
+  color: #8c2020;
+}
+
+.sv-media__grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  overflow-y: auto;
+}
+
+.sv-media__tile {
+  position: relative;
+}
+
+.sv-media__pick {
+  background: var(--sv-surface-muted);
+  border: 1px solid var(--sv-line);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  text-align: left;
+  width: 100%;
+}
+
+.sv-media__pick:hover {
+  border-color: var(--sv-accent);
+}
+
+.sv-media__thumbnail {
+  aspect-ratio: 4 / 3;
+  background: #ffffff;
+  border-radius: 6px;
+  object-fit: contain;
+  width: 100%;
+}
+
+.sv-media__name {
+  color: var(--sv-ink);
+  font-size: 11px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sv-media__details {
+  color: var(--sv-muted);
+  font-size: 11px;
+}
+
+.sv-media__delete {
+  background: var(--sv-surface);
+  border: 1px solid var(--sv-line);
+  border-radius: 6px;
+  color: var(--sv-muted);
+  cursor: pointer;
+  font-size: 11px;
+  opacity: 0;
+  padding: 2px 6px;
+  position: absolute;
+  right: 4px;
+  top: 4px;
+}
+
+.sv-media__tile:hover .sv-media__delete,
+.sv-media__delete.is-confirming {
+  opacity: 1;
+}
+
+.sv-media__delete.is-confirming {
+  background: #8c2020;
+  border-color: #8c2020;
+  color: #ffffff;
+}
+
+.sv-media__footer {
+  display: flex;
+  justify-content: center;
+}
+
+.sv-media__more {
+  background: transparent;
+  border: 1px solid var(--sv-line);
+  border-radius: 6px;
+  color: var(--sv-ink);
+  cursor: pointer;
+  font-size: 12px;
+  padding: 6px 14px;
+}
+
+.sv-media__more:hover {
   background: var(--sv-surface-muted);
 }

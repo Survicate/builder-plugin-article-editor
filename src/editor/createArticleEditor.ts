@@ -1,6 +1,7 @@
 import { Editor, type Extensions } from '@tiptap/core';
 import { TableKit } from '@tiptap/extension-table';
 import StarterKit from '@tiptap/starter-kit';
+import type { AssetLibrary } from '@/assets/assetLibrary';
 import { TABLE_CELL_MIN_WIDTH } from '@/constants';
 import { normalizeIncomingHtml } from '@/editor/normalizeIncomingHtml';
 import { serializeArticleHtml } from '@/editor/serializeArticleHtml';
@@ -13,6 +14,7 @@ import { Figcaption, Figure } from '@/extensions/Figure';
 import { ImageUpload } from '@/extensions/ImageUpload';
 import { LinkSearch } from '@/extensions/LinkSearch';
 import { LinkShortcut } from '@/extensions/LinkShortcut';
+import { MediaLibrary } from '@/extensions/MediaLibrary';
 import { cleanPastedHtml } from '@/extensions/PasteCleanup';
 import { inlineImagesToObjectUrls, PasteImageUpload } from '@/extensions/PasteImageUpload';
 import { SlashCommands } from '@/extensions/SlashCommands';
@@ -21,6 +23,7 @@ import type { SearchSiteLinks } from '@/search/searchSiteLinks';
 import type { UploadImage } from '@/upload/uploadImage';
 
 export interface CreateArticleEditorOptions {
+  assetLibrary?: AssetLibrary | null;
   content: string;
   element: HTMLElement;
   onContentError: (error: Error) => void;
@@ -32,6 +35,7 @@ export interface CreateArticleEditorOptions {
 }
 
 interface ExtensionOptions {
+  assetLibrary?: AssetLibrary | null;
   onError?: (message: string) => void;
   onStatus?: (message: string | null) => void;
   searchLinks?: SearchSiteLinks | null;
@@ -39,6 +43,7 @@ interface ExtensionOptions {
 }
 
 export const createArticleExtensions = ({
+  assetLibrary,
   onError,
   onStatus,
   searchLinks,
@@ -75,6 +80,11 @@ export const createArticleExtensions = ({
     upload: uploadImage ?? null,
   }),
   LinkSearch.configure({ search: searchLinks ?? null }),
+  MediaLibrary.configure({
+    library: assetLibrary ?? null,
+    onError: onError ?? (() => undefined),
+    upload: uploadImage ?? null,
+  }),
   PasteImageUpload.configure({
     onError: onError ?? (() => undefined),
     onStatus: onStatus ?? (() => undefined),
@@ -85,6 +95,7 @@ export const createArticleExtensions = ({
 export const ARTICLE_EXTENSIONS = createArticleExtensions();
 
 export const createArticleEditor = ({
+  assetLibrary,
   content,
   element,
   onContentError,
@@ -101,7 +112,13 @@ export const createArticleEditor = ({
     },
     element,
     emitContentError: true,
-    extensions: createArticleExtensions({ onError, onStatus, searchLinks, uploadImage }),
+    extensions: createArticleExtensions({
+      assetLibrary,
+      onError,
+      onStatus,
+      searchLinks,
+      uploadImage,
+    }),
     onContentError: ({ error }) => onContentError(error),
     onUpdate: ({ editor }) => onUpdate(serializeArticleHtml(editor.getHTML())),
   });

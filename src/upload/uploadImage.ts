@@ -9,7 +9,7 @@ export interface BuilderUploadContext {
   };
 }
 
-const spaceApiKey = (context: BuilderUploadContext): string | undefined =>
+export const spaceApiKey = (context: BuilderUploadContext): string | undefined =>
   context.user?.apiKey ?? context.user?.organization?.value?.id;
 
 export type UploadImage = (file: File) => Promise<string>;

@@ -111,6 +111,12 @@ const ITEMS: (ToolbarItem | typeof SEPARATOR)[] = [
     title: 'Upload an image from your computer',
     wide: true,
   },
+  {
+    label: 'Library',
+    run: (editor) => editor.storage.mediaLibrary.browseAndInsert(),
+    title: 'Pick an image that is already in the library',
+    wide: true,
+  },
 ];
 
 const TABLE_ITEMS: ToolbarItem[] = [
