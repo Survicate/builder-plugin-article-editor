@@ -11,6 +11,7 @@ import { AuthorQuote } from '@/extensions/AuthorQuote';
 import { DataGraph } from '@/extensions/DataGraph';
 import { ExpertRoundtable } from '@/extensions/ExpertRoundtable';
 import { Figcaption, Figure } from '@/extensions/Figure';
+import { HtmlEmbed } from '@/extensions/HtmlEmbed';
 import { ImageUpload } from '@/extensions/ImageUpload';
 import { LinkSearch } from '@/extensions/LinkSearch';
 import { LinkShortcut } from '@/extensions/LinkShortcut';
@@ -71,6 +72,7 @@ export const createArticleExtensions = ({
   DataGraph,
   Figure,
   Figcaption,
+  HtmlEmbed,
   SpanClass,
   SlashCommands,
   LinkShortcut,

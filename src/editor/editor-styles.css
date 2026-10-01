@@ -1156,3 +1156,25 @@
 .sv-media__more:hover {
   background: var(--sv-surface-muted);
 }
+
+.sv-embed-card__code {
+  background: #ffffff;
+  border: 1px solid #ddd4fc;
+  border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  padding: 8px 10px;
+  resize: vertical;
+  width: 100%;
+}
+
+.sv-embed-card__code:focus {
+  border-color: var(--sv-accent);
+  outline: none;
+}
+
+.sv-embed-card__hint {
+  color: var(--sv-muted);
+  font-size: 11px;
+}
