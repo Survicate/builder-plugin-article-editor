@@ -2,6 +2,7 @@ import { mergeAttributes, Node } from '@tiptap/core';
 import { TextSelection } from '@tiptap/pm/state';
 import { dropUnsafeHref, normalizeHref } from '@/editor/normalizeHref';
 import { stopsInteractiveEvents } from '@/extensions/blockFields';
+import { normalizeImageSize } from '@/extensions/imageSize';
 
 const ALIGN_CHOICES = [
   { label: '◧', title: 'Text wraps on the right', value: 'left' },
@@ -46,6 +47,11 @@ export const ArticleImage = Node.create({
       alt: plainAttribute('alt'),
       height: plainAttribute('height'),
       href: linkHrefAttribute(),
+      size: {
+        parseHTML: (element: HTMLElement) => element.getAttribute('data-size'),
+        renderHTML: (attributes: Record<string, unknown>) =>
+          attributes.size ? { 'data-size': attributes.size } : {},
+      },
       src: plainAttribute('src'),
       target: linkAttribute('target'),
       title: plainAttribute('title'),
@@ -64,6 +70,7 @@ export const ArticleImage = Node.create({
       const newTabLabel = document.createElement('label');
       const newTabBox = document.createElement('input');
       const titleField = document.createElement('input');
+      const sizeField = document.createElement('input');
       const captionButton = document.createElement('button');
       const replaceButton = document.createElement('button');
 
@@ -158,6 +165,23 @@ export const ArticleImage = Node.create({
         setAttributes({ title: titleField.value.trim() || null });
       });
 
+      const reflectSize = (size: string | null) => {
+        image.style.width = size ?? '';
+      };
+
+      sizeField.className = 'sv-image__size';
+      sizeField.type = 'text';
+      sizeField.placeholder = 'Width: 320px or 45%';
+      sizeField.title = 'Display width, useful next to wrapped text (blank = natural size)';
+      sizeField.value = (node.attrs.size as string | null) ?? '';
+      stopEditorEvents(sizeField);
+      sizeField.addEventListener('change', () => {
+        const size = normalizeImageSize(sizeField.value);
+
+        sizeField.value = size ?? '';
+        setAttributes({ size });
+      });
+
       captionButton.className = 'sv-image__caption';
       captionButton.type = 'button';
       captionButton.textContent = 'Caption';
@@ -221,9 +245,18 @@ export const ArticleImage = Node.create({
         editor.storage.mediaLibrary.browseAndReplace(position);
       });
 
-      controls.append(alignGroup, linkField, newTabLabel, titleField, captionButton, replaceButton);
+      controls.append(
+        alignGroup,
+        linkField,
+        newTabLabel,
+        titleField,
+        sizeField,
+        captionButton,
+        replaceButton,
+      );
       dom.append(image, altField, controls);
       reflectAlign((node.attrs.align as string | null) ?? null);
+      reflectSize((node.attrs.size as string | null) ?? null);
 
       return {
         deselectNode: () => dom.classList.remove('is-selected'),
@@ -240,6 +273,11 @@ export const ArticleImage = Node.create({
           image.src = (updated.attrs.src as string | null) ?? '';
           image.alt = (updated.attrs.alt as string | null) ?? '';
           reflectAlign((updated.attrs.align as string | null) ?? null);
+          reflectSize((updated.attrs.size as string | null) ?? null);
+
+          if (document.activeElement !== sizeField) {
+            sizeField.value = (updated.attrs.size as string | null) ?? '';
+          }
 
           if (document.activeElement !== altField) {
             altField.value = (updated.attrs.alt as string | null) ?? '';

@@ -941,6 +941,19 @@
   outline: none;
 }
 
+.sv-image__size {
+  border: 1px solid var(--sv-line);
+  border-radius: 6px;
+  font-size: 12px;
+  padding: 5px 8px;
+  width: 150px;
+}
+
+.sv-image__size:focus {
+  border-color: var(--sv-accent);
+  outline: none;
+}
+
 .sv-image__caption {
   background: transparent;
   border: 1px solid var(--sv-line);

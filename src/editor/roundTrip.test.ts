@@ -79,6 +79,13 @@ describe('article round-trip', () => {
     expect(roundTrip(html)).toContain('data-align="left"');
   });
 
+  it('keeps the image display size override', () => {
+    const html =
+      '<img src="https://cdn.builder.io/api/v1/image/x" alt="" data-align="right" data-size="45%">';
+
+    expect(roundTrip(html)).toContain('data-size="45%"');
+  });
+
   it('keeps the image tooltip title', () => {
     const html =
       '<img src="https://cdn.builder.io/api/v1/image/x" alt="Chart" title="Quarterly results">';
