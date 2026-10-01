@@ -5,8 +5,11 @@ import { stopsInteractiveEvents } from '@/extensions/blockFields';
  * Raw markup block for one-off embeds the dedicated cards do not cover. The
  * markup lives in an attribute and is only ever shown inside a textarea, so
  * nothing from it runs in the dashboard; the site build sanitizes it before
- * it reaches readers (iframes render, scripts are stripped).
+ * it reaches readers (iframes render, scripts are stripped). Serialization
+ * parses the markup in an inert document, where nothing loads or executes,
+ * and the serializer adopts the element from there.
  */
+const inertDocument = (): Document => document.implementation.createHTMLDocument('html-embed');
 export const HtmlEmbed = Node.create({
   addAttributes() {
     return {
@@ -86,7 +89,7 @@ export const HtmlEmbed = Node.create({
   },
 
   renderHTML({ node }) {
-    const dom = document.createElement('div');
+    const dom = inertDocument().createElement('div');
 
     dom.setAttribute('data-article-embed', 'html');
     dom.innerHTML = (node.attrs.html as string | null) ?? '';
