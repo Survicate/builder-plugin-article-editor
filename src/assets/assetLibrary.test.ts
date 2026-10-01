@@ -36,6 +36,35 @@ describe('createAssetLibrary', () => {
     await expect(library?.list({ limit: 24, offset: 0 })).rejects.toThrow('still loading');
   });
 
+  it('prefers the plugin private key, which the Admin API requires', async () => {
+    const fetchMock = respondWith({ data: { assets: [] } });
+    const getPluginPrivateKey = vi.fn().mockResolvedValue('plugin-private-key');
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const library = createAssetLibrary({ ...context, globalState: { getPluginPrivateKey } });
+
+    await library?.list({ limit: 24, offset: 0 });
+
+    expect(getPluginPrivateKey).toHaveBeenCalledWith('@survicate/builder-plugin-article-editor');
+    expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe('Bearer plugin-private-key');
+  });
+
+  it('falls back to the session headers when no plugin key is issued', async () => {
+    const fetchMock = respondWith({ data: { assets: [] } });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const library = createAssetLibrary({
+      ...context,
+      globalState: { getPluginPrivateKey: vi.fn().mockRejectedValue(new Error('nope')) },
+    });
+
+    await library?.list({ limit: 24, offset: 0 });
+
+    expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe('Bearer test-token');
+  });
+
   it('lists newest images first, scoped to the space', async () => {
     const fetchMock = respondWith({ data: { assets: [asset] } });
 
