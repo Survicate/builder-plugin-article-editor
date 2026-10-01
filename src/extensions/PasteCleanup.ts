@@ -1,4 +1,3 @@
-import { Extension } from '@tiptap/core';
 import { surveySignupUrl } from '@/editor/embedUrl';
 
 const WORD_CLASS = /\sclass="?Mso[^"\s>]*"?/gi;
@@ -127,11 +126,3 @@ export const cleanPastedHtml = (html: string): string =>
     .replace(BOLD_WRAPPER, '<strong$1>')
     .replace(/<\/b>/gi, '</strong>')
     .trim();
-
-export const PasteCleanup = Extension.create({
-  name: 'pasteCleanup',
-
-  transformPastedHTML(html) {
-    return cleanPastedHtml(html);
-  },
-});

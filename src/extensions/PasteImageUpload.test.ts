@@ -1,5 +1,9 @@
-import { describe, expect, it } from 'vitest';
-import { fileNameForSrc, isForeignImageSrc } from '@/extensions/PasteImageUpload';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  fileNameForSrc,
+  inlineImagesToObjectUrls,
+  isForeignImageSrc,
+} from '@/extensions/PasteImageUpload';
 
 describe('isForeignImageSrc', () => {
   it('flags inline data images from a Google Docs paste', () => {
@@ -15,9 +19,12 @@ describe('isForeignImageSrc', () => {
     expect(isForeignImageSrc('https://cdn.builder.io/api/v1/image/assets%2Fabc%2Fdef')).toBe(false);
   });
 
+  it('flags object urls made from pasted inline images', () => {
+    expect(isForeignImageSrc('blob:https://builder.io/123')).toBe(true);
+  });
+
   it('ignores relative addresses and other schemes', () => {
     expect(isForeignImageSrc('/images/logo.png')).toBe(false);
-    expect(isForeignImageSrc('blob:https://builder.io/123')).toBe(false);
     expect(isForeignImageSrc('data:text/html,hello')).toBe(false);
   });
 
@@ -55,5 +62,57 @@ describe('fileNameForSrc', () => {
 
   it('falls back to a safe name when the address cannot be read', () => {
     expect(fileNameForSrc('https://', 'image/svg+xml')).toBe('pasted-image.svg');
+  });
+});
+
+describe('inlineImagesToObjectUrls', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  const stubObjectUrls = () => {
+    let counter = 0;
+    const created: Blob[] = [];
+
+    vi.stubGlobal('URL', {
+      ...URL,
+      createObjectURL: (blob: Blob) => {
+        created.push(blob);
+        counter += 1;
+
+        return `blob:https://builder.io/${counter}`;
+      },
+    });
+
+    return created;
+  };
+
+  it('swaps base64 images for object urls and keeps the rest of the markup', () => {
+    const created = stubObjectUrls();
+    const pixel = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+    const html = `<p>before</p><img alt="shot" src="data:image/png;base64,${pixel}"><p>after</p>`;
+
+    const out = inlineImagesToObjectUrls(html);
+
+    expect(out).toContain('<img alt="shot" src="blob:https://builder.io/1">');
+    expect(out).toContain('<p>before</p>');
+    expect(out).toContain('<p>after</p>');
+    expect(out).not.toContain('base64');
+    expect(created[0].type).toBe('image/png');
+  });
+
+  it('leaves html without inline images untouched', () => {
+    const html = '<p>plain</p><img src="https://cdn.builder.io/x.png">';
+
+    expect(inlineImagesToObjectUrls(html)).toBe(html);
+  });
+
+  it('drops the source of an unreadable inline image instead of keeping the bytes', () => {
+    stubObjectUrls();
+
+    const out = inlineImagesToObjectUrls('<img src="data:image/png;base64,@@not-base64@@">');
+
+    expect(out).not.toContain('base64');
+    expect(out).toContain('<img>');
   });
 });

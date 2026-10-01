@@ -13,8 +13,8 @@ import { Figcaption, Figure } from '@/extensions/Figure';
 import { ImageUpload } from '@/extensions/ImageUpload';
 import { LinkSearch } from '@/extensions/LinkSearch';
 import { LinkShortcut } from '@/extensions/LinkShortcut';
-import { PasteCleanup } from '@/extensions/PasteCleanup';
-import { PasteImageUpload } from '@/extensions/PasteImageUpload';
+import { cleanPastedHtml } from '@/extensions/PasteCleanup';
+import { inlineImagesToObjectUrls, PasteImageUpload } from '@/extensions/PasteImageUpload';
 import { SlashCommands } from '@/extensions/SlashCommands';
 import { SpanClass } from '@/extensions/SpanClass';
 import type { SearchSiteLinks } from '@/search/searchSiteLinks';
@@ -75,7 +75,6 @@ export const createArticleExtensions = ({
     upload: uploadImage ?? null,
   }),
   LinkSearch.configure({ search: searchLinks ?? null }),
-  PasteCleanup,
   PasteImageUpload.configure({
     onError: onError ?? (() => undefined),
     onStatus: onStatus ?? (() => undefined),
@@ -97,6 +96,9 @@ export const createArticleEditor = ({
 }: CreateArticleEditorOptions): Editor =>
   new Editor({
     content: normalizeIncomingHtml(content),
+    editorProps: {
+      transformPastedHTML: (html: string) => inlineImagesToObjectUrls(cleanPastedHtml(html)),
+    },
     element,
     emitContentError: true,
     extensions: createArticleExtensions({ onError, onStatus, searchLinks, uploadImage }),
