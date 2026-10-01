@@ -11,6 +11,7 @@ import {
   ERROR_DISMISS_MS,
   ON_CHANGE_DEBOUNCE_MS,
 } from '@/constants';
+import { attachColumnResize } from '@/editor/columnResize';
 import { createArticleEditor, serializeEditor } from '@/editor/createArticleEditor';
 import { collapseFormattedHtml, formatArticleHtml } from '@/editor/formatArticleHtml';
 import { normalizeIncomingHtml } from '@/editor/normalizeIncomingHtml';
@@ -46,6 +47,7 @@ export const ArticleEditor = ({
   value,
 }: ArticleEditorProps) => {
   const externalValue = value === undefined || value === null ? undefined : String(value);
+  const containerRef = useRef<HTMLDivElement>(null);
   const hostRef = useRef<HTMLDivElement>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<Editor | null>(null);
@@ -147,8 +149,12 @@ export const ArticleEditor = ({
     toolbarHost.prepend(createToolbar(editor));
 
     const disposeCursorSync = createCursorSectionNotifier(editor, CURSOR_SYNC_DEBOUNCE_MS);
+    const disposeColumnResize = containerRef.current
+      ? attachColumnResize(containerRef.current)
+      : () => undefined;
 
     return () => {
+      disposeColumnResize();
       disposeCursorSync();
       clearTimeout(debounceRef.current);
       clearTimeout(errorTimeoutRef.current);
@@ -229,7 +235,7 @@ export const ArticleEditor = ({
     : EDITOR_CONTAINER_CLASS;
 
   return (
-    <div className={containerClass}>
+    <div className={containerClass} ref={containerRef}>
       <div className="sv-toolbar-host" ref={toolbarRef}>
         <div className="sv-toolbar-host__utils">
           <button

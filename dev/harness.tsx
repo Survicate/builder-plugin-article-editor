@@ -130,6 +130,7 @@ const Harness = () => {
         </section>
         <section>
           <h2>Round-trip</h2>
+          <iframe className="harness-preview-frame" src="about:blank" title="Preview stand-in" />
           <table className="harness-table">
             <thead>
               <tr>
