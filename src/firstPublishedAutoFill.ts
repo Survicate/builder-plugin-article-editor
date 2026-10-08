@@ -11,21 +11,37 @@ export interface ContentEditorActions {
   ): void;
 }
 
-type EditingContentModel = NonNullable<
-  NonNullable<(typeof appState)['designerState']>['editingContentModel']
->;
+interface EditableContentData {
+  get(field: string): unknown;
+  set(field: string, value: unknown): void;
+}
 
-const editingModelName = (): string | undefined =>
-  appState.designerState?.editingModel?.name ?? appState.editingModel?.name;
+export interface FirstPublishedAppState {
+  designerState?: {
+    editingContentModel?: { data?: EditableContentData };
+    editingModel?: { name?: string };
+  };
+  editingModel?: { name?: string };
+}
 
-const blogPostMissingFirstPublished = (): EditingContentModel | null => {
-  if (editingModelName() !== BLOG_POST_MODEL_NAME) return null;
+const emptyFirstPublishedData = (
+  state: FirstPublishedAppState | undefined,
+): EditableContentData | null => {
+  if (!state) return null;
 
-  const content = appState.designerState?.editingContentModel;
+  const modelName = state.designerState?.editingModel?.name ?? state.editingModel?.name;
 
-  if (!content?.data || content.data.get(FIRST_PUBLISHED_FIELD)) return null;
+  if (modelName !== BLOG_POST_MODEL_NAME) return null;
 
-  return content;
+  const data = state.designerState?.editingContentModel?.data;
+
+  if (!data || data.get(FIRST_PUBLISHED_FIELD)) return null;
+
+  return data;
+};
+
+const fillNow = (data: EditableContentData | null): void => {
+  data?.set(FIRST_PUBLISHED_FIELD, new Date().toString());
 };
 
 /**
@@ -33,11 +49,19 @@ const blogPostMissingFirstPublished = (): EditingContentModel | null => {
  * in the editor (a newly created post), so every post carries the date the
  * site sorts and displays by. The value stays editable in the sidebar like
  * any other field.
+ *
+ * Runs through two independent paths: the editor.onLoad reaction below, and
+ * fillFirstPublishedIfEmpty called when the Body Content field editor mounts,
+ * which is guaranteed to execute for every opened blog post.
  */
+export const fillFirstPublishedIfEmpty = (
+  state: FirstPublishedAppState | undefined = appState,
+): void => {
+  fillNow(emptyFirstPublishedData(state));
+};
+
 export const autoFillFirstPublished = (actions: ContentEditorActions): void => {
-  actions.safeReaction(
-    blogPostMissingFirstPublished,
-    (content) => content?.data?.set(FIRST_PUBLISHED_FIELD, new Date().toString()),
-    { fireImmediately: true },
-  );
+  actions.safeReaction(() => emptyFirstPublishedData(appState), fillNow, {
+    fireImmediately: true,
+  });
 };
