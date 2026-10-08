@@ -52,7 +52,7 @@ const pickOf = (asset: BuilderAsset): PickedImage => ({
 });
 
 interface TileCallbacks {
-  onDelete: (asset: BuilderAsset, tile: HTMLElement) => void;
+  onDelete: (asset: BuilderAsset, tile: HTMLElement, removeButton: HTMLButtonElement) => void;
   onPick: (asset: BuilderAsset) => void;
 }
 
@@ -84,6 +84,8 @@ const buildTile = (asset: BuilderAsset, callbacks: TileCallbacks): HTMLElement =
   remove.textContent = '✕';
   remove.title = 'Delete this file from the library';
   remove.addEventListener('click', () => {
+    if (remove.disabled) return;
+
     if (!remove.classList.contains('is-confirming')) {
       remove.classList.add('is-confirming');
       remove.textContent = 'Sure?';
@@ -91,7 +93,8 @@ const buildTile = (asset: BuilderAsset, callbacks: TileCallbacks): HTMLElement =
       return;
     }
 
-    callbacks.onDelete(asset, tile);
+    remove.disabled = true;
+    callbacks.onDelete(asset, tile, remove);
   });
   tile.addEventListener('mouseleave', () => {
     remove.classList.remove('is-confirming');
@@ -147,12 +150,15 @@ export const openMediaLibrary = (options: MediaLibraryDialogOptions) => {
     options.onPick(image);
   };
 
-  const deleteAsset = (asset: BuilderAsset, tile: HTMLElement) => {
+  const deleteAsset = (asset: BuilderAsset, tile: HTMLElement, removeButton: HTMLButtonElement) => {
     setNotice(null);
     options.library
       .remove(asset.id)
       .then(() => tile.remove())
-      .catch((error: unknown) => setNotice(describeError(error), true));
+      .catch((error: unknown) => {
+        removeButton.disabled = false;
+        setNotice(describeError(error), true);
+      });
   };
 
   const load = (append: boolean) => {
