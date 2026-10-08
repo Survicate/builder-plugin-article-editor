@@ -164,6 +164,56 @@ describe('createAssetLibrary', () => {
     await expect(library?.remove('asset-1')).rejects.toThrow('Not allowed');
   });
 
+  it('treats a delete error for an already-removed asset as success', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({ errors: [{ message: 'Error deleting asset' }] }),
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+      })
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({ data: { assets: [] } }),
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+      });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const library = createAssetLibrary(context);
+
+    await expect(library?.remove('asset-1')).resolves.toBeUndefined();
+
+    const verification = JSON.parse(fetchMock.mock.calls[1][1].body);
+
+    expect(verification.variables.input.query).toEqual({ id: 'asset-1' });
+  });
+
+  it('keeps the delete error when the asset survived', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({ errors: [{ message: 'Error deleting asset' }] }),
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+      })
+      .mockResolvedValueOnce({
+        json: () => Promise.resolve({ data: { assets: [asset] } }),
+        ok: true,
+        status: 200,
+        statusText: 'OK',
+      });
+
+    vi.stubGlobal('fetch', fetchMock);
+
+    const library = createAssetLibrary(context);
+
+    await expect(library?.remove('asset-1')).rejects.toThrow('Error deleting asset');
+  });
+
   it('explains a refused request', async () => {
     vi.stubGlobal('fetch', respondWith({}, false, 403));
 

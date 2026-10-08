@@ -99,6 +99,49 @@ describe('openMediaLibrary', () => {
     expect(document.querySelector('.sv-media__tile')).toBeNull();
   });
 
+  it('blocks repeated clicks while the delete request runs', async () => {
+    let settle = () => undefined as void;
+    const library = libraryWith([asset()]);
+
+    library.remove = vi.fn().mockReturnValue(
+      new Promise<void>((resolve) => {
+        settle = resolve;
+      }),
+    );
+    openMediaLibrary({ library, onPick: () => undefined, title: 'Pick' });
+    await flush();
+
+    const remove = document.querySelector<HTMLButtonElement>('.sv-media__delete');
+
+    remove?.click();
+    remove?.click();
+    remove?.click();
+    expect(library.remove).toHaveBeenCalledTimes(1);
+    expect(remove?.disabled).toBe(true);
+
+    settle();
+    await flush();
+    expect(document.querySelector('.sv-media__tile')).toBeNull();
+  });
+
+  it('re-enables the delete button when the request fails', async () => {
+    const library = libraryWith([asset()]);
+
+    library.remove = vi.fn().mockRejectedValue(new Error('Error deleting asset'));
+    openMediaLibrary({ library, onPick: () => undefined, title: 'Pick' });
+    await flush();
+
+    const remove = document.querySelector<HTMLButtonElement>('.sv-media__delete');
+
+    remove?.click();
+    remove?.click();
+    await flush();
+
+    expect(remove?.disabled).toBe(false);
+    expect(document.querySelector('.sv-media__tile')).not.toBeNull();
+    expect(document.querySelector('.sv-media__notice')?.textContent).toContain('Error deleting');
+  });
+
   it('searches after a pause instead of on every keystroke', async () => {
     vi.useFakeTimers();
 

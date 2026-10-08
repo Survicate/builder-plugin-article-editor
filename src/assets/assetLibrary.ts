@@ -150,7 +150,19 @@ export const createAssetLibrary = (context?: BuilderAdminContext): AssetLibrary 
       await authorizationHeaders(context, readPluginKey);
     },
     remove: async (id) => {
-      await callAdmin(context, readPluginKey, DELETE_ASSET_MUTATION, { id });
+      try {
+        await callAdmin(context, readPluginKey, DELETE_ASSET_MUTATION, { id });
+      } catch (error) {
+        const data = await callAdmin(context, readPluginKey, ASSETS_QUERY, {
+          input: { limit: 1, offset: 0, query: { id } },
+        }).catch(() => undefined);
+
+        if (!data) throw error;
+
+        const stillExists = (data.assets ?? []).some((asset) => asset?.id === id);
+
+        if (stillExists) throw error;
+      }
     },
   };
 };
