@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   autoFillFirstPublished,
   type ContentEditorActions,
+  fillFirstPublishedIfEmpty,
 } from '@/firstPublishedAutoFill';
 
 const runReaction = (): void => {
@@ -85,5 +86,55 @@ describe('autoFillFirstPublished', () => {
     appState.designerState = { editingModel: { name: 'blog-post' } };
 
     expect(() => runReaction()).not.toThrow();
+  });
+});
+
+describe('fillFirstPublishedIfEmpty', () => {
+  beforeEach(() => {
+    delete appState.designerState;
+    delete appState.editingModel;
+  });
+
+  it('fills an empty First Published field through a passed context', () => {
+    const data = new Map<string, unknown>();
+
+    fillFirstPublishedIfEmpty({
+      designerState: {
+        editingContentModel: { data },
+        editingModel: { name: 'blog-post' },
+      },
+    });
+
+    expect(typeof data.get('publishedAt')).toBe('string');
+  });
+
+  it('falls back to the shared app state when no context is passed', () => {
+    const data = new Map<string, unknown>();
+
+    appState.designerState = {
+      editingContentModel: { data },
+      editingModel: { name: 'blog-post' },
+    };
+
+    fillFirstPublishedIfEmpty();
+
+    expect(typeof data.get('publishedAt')).toBe('string');
+  });
+
+  it('survives a missing context', () => {
+    expect(() => fillFirstPublishedIfEmpty(undefined)).not.toThrow();
+  });
+
+  it('ignores other models through a passed context', () => {
+    const data = new Map<string, unknown>();
+
+    fillFirstPublishedIfEmpty({
+      designerState: {
+        editingContentModel: { data },
+        editingModel: { name: 'page' },
+      },
+    });
+
+    expect(data.has('publishedAt')).toBe(false);
   });
 });
