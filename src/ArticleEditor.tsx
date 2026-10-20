@@ -18,10 +18,6 @@ import { normalizeIncomingHtml } from '@/editor/normalizeIncomingHtml';
 import { createCursorSectionNotifier } from '@/editor/previewScrollSync';
 import { createToolbar } from '@/editor/toolbar';
 import {
-  fillFirstPublishedIfEmpty,
-  type FirstPublishedAppState,
-} from '@/firstPublishedAutoFill';
-import {
   type BuilderSearchContext,
   createSiteLinkSearch,
   type SearchSiteLinks,
@@ -33,7 +29,7 @@ import '@/editor/editor-styles.css';
 export interface ArticleEditorProps {
   /** Overrides the Builder asset browsing, so the local harness can exercise it offline. */
   assetLibrary?: AssetLibrary | null;
-  context?: BuilderAdminContext & BuilderSearchContext & FirstPublishedAppState;
+  context?: BuilderAdminContext & BuilderSearchContext;
   onChange: (value: string) => void;
   /** Overrides the Builder link search, so the local harness can exercise it offline. */
   searchLinks?: SearchSiteLinks | null;
@@ -101,10 +97,6 @@ export const ArticleEditor = ({
 
     return upload(await prepareImageForUpload(file));
   });
-
-  useEffect(() => {
-    fillFirstPublishedIfEmpty(context);
-  }, [context]);
 
   useEffect(() => {
     onChangeRef.current = onChange;
