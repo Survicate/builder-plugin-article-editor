@@ -24,7 +24,7 @@ export const applyLink = (editor: Editor, rawHref: string, options: LinkOptions 
     target: options.newTab === true ? '_blank' : null,
   };
 
-  if (editor.state.selection.empty) {
+  if (editor.state.selection.empty && !editor.isActive('link')) {
     return chain
       .insertContent({ marks: [{ attrs, type: 'link' }], text: href, type: 'text' })
       .run();
