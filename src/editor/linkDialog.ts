@@ -14,9 +14,10 @@ export interface LinkOptions {
 
 export const applyLink = (editor: Editor, rawHref: string, options: LinkOptions = {}) => {
   const href = normalizeHref(rawHref);
-  const chain = editor.chain().focus().extendMarkRange('link');
 
-  if (!href) return chain.unsetLink().run();
+  editor.chain().focus().extendMarkRange('link').run();
+
+  if (!href) return editor.chain().unsetLink().run();
 
   const attrs = {
     href,
@@ -24,13 +25,14 @@ export const applyLink = (editor: Editor, rawHref: string, options: LinkOptions 
     target: options.newTab === true ? '_blank' : null,
   };
 
-  if (editor.state.selection.empty && !editor.isActive('link')) {
-    return chain
+  if (editor.state.selection.empty) {
+    return editor
+      .chain()
       .insertContent({ marks: [{ attrs, type: 'link' }], text: href, type: 'text' })
       .run();
   }
 
-  return chain.setLink(attrs).run();
+  return editor.chain().setLink(attrs).run();
 };
 
 const buildCheckbox = (labelText: string, checked: boolean) => {
@@ -174,6 +176,7 @@ const buildDialog = (
 
 export const openLinkDialog = (editor: Editor) => {
   document.querySelector(`.${DIALOG_CLASS}`)?.remove();
+  editor.chain().extendMarkRange('link').run();
 
   const attributes = editor.getAttributes('link');
   const current: CurrentLink = {
