@@ -74,6 +74,28 @@ describe('applyLink', () => {
     );
   });
 
+  it('keeps the link text when options are toggled from the link end boundary', () => {
+    const active = setup('<p>See <a href="https://example.com">the UserBit report</a> today</p>');
+
+    active.commands.setTextSelection(23);
+    applyLink(active, 'https://example.com', { newTab: true });
+
+    expect(serializeEditor(active)).toBe(
+      '<p>See <a target="_blank" href="https://example.com">the UserBit report</a> today</p>',
+    );
+  });
+
+  it('keeps the link text when options are toggled from the link start boundary', () => {
+    const active = setup('<p>See <a href="https://example.com">the UserBit report</a> today</p>');
+
+    active.commands.setTextSelection(5);
+    applyLink(active, 'https://example.com', { nofollow: true });
+
+    expect(serializeEditor(active)).toBe(
+      '<p>See <a rel="nofollow" href="https://example.com">the UserBit report</a> today</p>',
+    );
+  });
+
   it('removes the link but keeps the words when the address is cleared', () => {
     const active = setup('<p><a href="/old/">Pricing</a></p>');
 
@@ -150,6 +172,18 @@ describe('openLinkDialog', () => {
     const input = document.querySelector<HTMLInputElement>('.sv-link-dialog__input');
 
     expect(input?.value).toBe('/pricing/');
+    expect(document.querySelector('.sv-link-dialog__remove')).not.toBeNull();
+  });
+
+  it('shows the current address when opened from the link end boundary', () => {
+    const active = setup('<p>See <a href="https://example.com">the UserBit report</a> today</p>');
+
+    active.commands.setTextSelection(23);
+    openLinkDialog(active);
+
+    const input = document.querySelector<HTMLInputElement>('.sv-link-dialog__input');
+
+    expect(input?.value).toBe('https://example.com');
     expect(document.querySelector('.sv-link-dialog__remove')).not.toBeNull();
   });
 
