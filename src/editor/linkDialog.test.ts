@@ -60,10 +60,18 @@ describe('applyLink', () => {
     active.commands.setTextSelection(3);
     applyLink(active, '/pricing/');
 
-    const html = serializeEditor(active);
+    expect(serializeEditor(active)).toBe('<p><a href="/pricing/">Pricing</a></p>');
+  });
 
-    expect(html).toContain('href="/pricing/"');
-    expect(html).not.toContain('/old/');
+  it('keeps the link text when nofollow is toggled from inside the link', () => {
+    const active = setup('<p>See <a href="https://example.com">the UserBit report</a> today</p>');
+
+    active.commands.setTextSelection(7);
+    applyLink(active, 'https://example.com', { nofollow: true });
+
+    expect(serializeEditor(active)).toBe(
+      '<p>See <a rel="nofollow" href="https://example.com">the UserBit report</a> today</p>',
+    );
   });
 
   it('removes the link but keeps the words when the address is cleared', () => {
